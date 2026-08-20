@@ -124,6 +124,10 @@
             cursor: pointer;
             white-space: nowrap;
             overflow: hidden;
+            width: 100%;
+            background: none;
+            border: none;
+            text-align: left;
         }
 
         .nav-item:hover {
@@ -147,10 +151,82 @@
             stroke-linejoin: round;
         }
 
-        .sidebar.collapsed .nav-text {
+        .sidebar.collapsed .nav-text,
+        .sidebar.collapsed .submenu-arrow,
+        .sidebar.collapsed .tools-submenu {
             opacity: 0;
             pointer-events: none;
             display: none;
+        }
+
+        /* Submenu for Tools */
+        .nav-item-dropdown {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .nav-dropdown-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .submenu-arrow {
+            width: 14px;
+            height: 14px;
+            transition: transform 0.2s ease;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .nav-item-dropdown.open .submenu-arrow {
+            transform: rotate(180deg);
+        }
+
+        .tools-submenu {
+            display: none;
+            flex-direction: column;
+            gap: 0.2rem;
+            padding-left: 1.5rem;
+            margin-top: 0.1rem;
+        }
+
+        .nav-item-dropdown.open .tools-submenu {
+            display: flex;
+        }
+
+        .submenu-category-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #71717a;
+            padding: 0.3rem 0.5rem;
+            margin-top: 0.2rem;
+        }
+
+        .sub-nav-item {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 0.75rem;
+            color: #a1a1aa;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 400;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .sub-nav-item:hover {
+            color: #ffffff;
+            background: #27272a;
         }
 
         .sidebar-bottom {
@@ -330,6 +406,10 @@
         .content {
             flex: 1;
             background-color: #ffffff;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
         }
 
         /* Toast Notifications Container (Top-Right) */
@@ -743,7 +823,7 @@
             cursor: pointer;
             border-radius: 6px;
             transition: all 0.2s ease;
-            position: relative; /* Чтобы бэдж позиционировался относительно кнопки */
+            position: relative;
         }
 
         .billing-toggle .toggle-btn.active {
@@ -752,7 +832,6 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
 
-        /* Бэдж скидки в правом верхнем углу кнопки Yearly */
         .discount-badge {
             position: absolute;
             top: -10px;
@@ -828,31 +907,35 @@
 
             <ul class="nav-list">
                 <li>
-                    <a href="#" class="nav-item active">
+                    <button class="nav-item active" data-view="dashboard">
                         <svg viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
                         <span class="nav-text">Dashboard</span>
-                    </a>
+                    </button>
                 </li>
-                <li>
-                    <a href="#" class="nav-item">
-                        <svg viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>
-                        <span class="nav-text">Notes</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#" class="nav-item">
-                        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                        <span class="nav-text">Schedule</span>
-                    </a>
+                <li class="nav-item-dropdown" id="tools-dropdown">
+                    <button class="nav-item nav-dropdown-toggle" id="tools-toggle-btn">
+                        <div style="display: flex; align-items: center; gap: 0.85rem;">
+                            <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                            <span class="nav-text">Tools</span>
+                        </div>
+                        <svg class="submenu-arrow" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <div class="tools-submenu">
+                        <div class="submenu-category-title">Text</div>
+                        <button class="sub-nav-item" data-tool="generate">Generate</button>
+                        <button class="sub-nav-item" data-tool="humanizer">Humanizer</button>
+                        <button class="sub-nav-item" data-tool="shortener">Shortener</button>
+                        <button class="sub-nav-item" data-tool="extender">Extender</button>
+                    </div>
                 </li>
             </ul>
         </div>
 
         <div class="sidebar-bottom">
-            <a href="#" class="nav-item" id="open-settings-btn">
+            <button class="nav-item" id="open-settings-btn">
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                 <span class="nav-text">Settings</span>
-            </a>
+            </button>
         </div>
     </aside>
 
@@ -882,7 +965,9 @@
             </button>
         </header>
 
-        <section class="content">
+        <section class="content" id="main-content-area">
+            <h1 id="content-title" style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">Dashboard</h1>
+            <p id="content-desc" style="color: #64748b; font-size: 0.9rem;">Welcome back to your study space.</p>
         </section>
     </main>
 
@@ -1023,7 +1108,7 @@
                 <div class="sub-card">
                     <h4>Starter</h4>
                     <div class="sub-price">
-                        $<span class="amount" data-monthly="2.99" data-yearly="29.99">2.99</span>
+                        $<span class="amount" data-monthly="2.99" data-yearly="29">2.99</span>
                         <span style="font-size: 0.75rem; font-weight: 400; color: #64748b;" class="period">/ mo</span>
                     </div>
                     <div class="sub-desc">Basic core tools for standard organization and simple study tracking.</div>
@@ -1033,7 +1118,7 @@
                 <div class="sub-card">
                     <h4>Pro</h4>
                     <div class="sub-price">
-                        $<span class="amount" data-monthly="8.99" data-yearly="89.99">8.99</span>
+                        $<span class="amount" data-monthly="8.99" data-yearly="89">8.99</span>
                         <span style="font-size: 0.75rem; font-weight: 400; color: #64748b;" class="period">/ mo</span>
                     </div>
                     <div class="sub-desc">Essential features for regular users and enhanced productivity.</div>
@@ -1043,7 +1128,7 @@
                 <div class="sub-card popular">
                     <h4>Advanced</h4>
                     <div class="sub-price">
-                        $<span class="amount" data-monthly="19.99" data-yearly="199.99">19.99</span>
+                        $<span class="amount" data-monthly="19.99" data-yearly="199">19.99</span>
                         <span style="font-size: 0.75rem; font-weight: 400; color: #64748b;" class="period">/ mo</span>
                     </div>
                     <div class="sub-desc">Advanced tools, priority support, and maximum power.</div>
@@ -1471,6 +1556,44 @@
             }
         });
     }
+
+    // Tools Dropdown Toggle in Sidebar
+    const toolsDropdown = document.getElementById('tools-dropdown');
+    const toolsToggleBtn = document.getElementById('tools-toggle-btn');
+
+    if (toolsToggleBtn && toolsDropdown) {
+        toolsToggleBtn.addEventListener('click', () => {
+            toolsDropdown.classList.toggle('open');
+        });
+    }
+
+    // Navigation switching (Dashboard vs Tools Subitems)
+    const contentTitle = document.getElementById('content-title');
+    const contentDesc = document.getElementById('content-desc');
+    const navDashboardBtn = document.querySelector('[data-view="dashboard"]');
+    const subToolBtns = document.querySelectorAll('.sub-nav-item');
+
+    if (navDashboardBtn) {
+        navDashboardBtn.addEventListener('click', () => {
+            navDashboardBtn.classList.add('active');
+            subToolBtns.forEach(b => b.classList.remove('active'));
+            if (contentTitle) contentTitle.textContent = 'Dashboard';
+            if (contentDesc) contentDesc.textContent = 'Welcome back to your study space.';
+        });
+    }
+
+    subToolBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (navDashboardBtn) navDashboardBtn.classList.remove('active');
+            subToolBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const toolName = btn.getAttribute('data-tool');
+            const capitalized = toolName.charAt(0).toUpperCase() + toolName.slice(1);
+            if (contentTitle) contentTitle.textContent = `Text: ${capitalized}`;
+            if (contentDesc) contentDesc.textContent = `Configure and run the text ${toolName} utility.`;
+        });
+    });
 
     // Settings Modal Open/Close
     const modalOverlay = document.getElementById('settings-modal-overlay');
