@@ -618,13 +618,33 @@
     const userIdInput = document.getElementById('user-id-input');
     const displayUsername = document.getElementById('display-username');
     const avatarInitial = document.getElementById('avatar-initial');
+    const adminTabBtn = document.getElementById('admin-db-tab');
+    const adminUsersList = document.getElementById('admin-users-list');
+
+    function getUsersDB() {
+        const users = localStorage.getItem('flowstudy_users');
+        return users ? JSON.parse(users) : [];
+    }
+
+    function saveUsersDB(users) {
+        localStorage.setItem('flowstudy_users', JSON.stringify(users));
+    }
 
     function applyUserData(name, id) {
         const cleanName = name ? name.trim() : 'User';
         displayUsername.textContent = cleanName;
         avatarInitial.textContent = cleanName.charAt(0).toUpperCase();
         usernameInput.value = cleanName;
-        userIdInput.value = id !== undefined && id !== null ? `#${id}` : '#1';
+        
+        const rawId = String(id || '1').replace(/^#/, '');
+        userIdInput.value = `#${rawId}`;
+
+        // Проверка на админа (#z)
+        if (rawId.toLowerCase() === 'z') {
+            adminTabBtn.style.display = 'block';
+        } else {
+            adminTabBtn.style.display = 'none';
+        }
     }
 
     const sessionRaw = localStorage.getItem('flowstudy_session');
@@ -641,6 +661,7 @@
         }
     }
 
+    // Редактирование Username
     usernameInput.addEventListener('input', (e) => {
         const newName = e.target.value.trim() || 'User';
         
@@ -650,8 +671,83 @@
         localStorage.setItem('flowstudy_username', newName);
 
         if (session) {
+            const users = getUsersDB();
+            const userIdx = users.findIndex(u => String(u.id) === String(session.id));
+            
             session.username = newName;
+            if (userIdx !== -1) users[userIdx].username = newName;
+            
             localStorage.setItem('flowstudy_session', JSON.stringify(session));
+            saveUsersDB(users);
+        }
+    });
+
+    // Редактирование User ID
+    userIdInput.addEventListener('change', (e) => {
+        let val = e.target.value.trim();
+        if (!val.startsWith('#')) val = `#${val}`;
+        if (val === '#') val = '#1';
+        
+        e.target.value = val;
+        const cleanId = val.replace(/^#/, '');
+
+        if (session) {
+            const users = getUsersDB();
+            const userIdx = users.findIndex(u => String(u.id) === String(session.id));
+            
+            session.id = cleanId;
+            if (userIdx !== -1) users[userIdx].id = cleanId;
+
+            localStorage.setItem('flowstudy_session', JSON.stringify(session));
+            saveUsersDB(users);
+        }
+
+        applyUserData(session ? session.username : usernameInput.value, cleanId);
+    });
+
+    // Отрисовка списка пользователей для админа (#z)
+    function renderAdminUsersList() {
+        const users = getUsersDB();
+        adminUsersList.innerHTML = '';
+
+        if (users.length === 0) {
+            adminUsersList.innerHTML = '<div style="color: #888;">No users found</div>';
+            return;
+        }
+
+        users.forEach(u => {
+            const row = document.createElement('div');
+            row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.05); padding: 8px 12px; border-radius: 6px;';
+            
+            row.innerHTML = `
+                <div>
+                    <strong style="color: #fff;">${u.username}</strong> 
+                    <span style="color: #888; font-size: 12px;">(#${u.id})</span>
+                    <div style="color: #aaa; font-size: 11px;">${u.email}</div>
+                </div>
+                <button class="delete-user-btn" data-id="${u.id}" style="background: #ff4d4d; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Delete</button>
+            `;
+
+            adminUsersList.appendChild(row);
+        });
+
+        document.querySelectorAll('.delete-user-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idToDelete = e.target.getAttribute('data-id');
+                if (confirm(`Are you sure you want to delete user #${idToDelete}?`)) {
+                    let updatedUsers = getUsersDB().filter(u => String(u.id) !== String(idToDelete));
+                    saveUsersDB(updatedUsers);
+                    renderAdminUsersList();
+                }
+            });
+        });
+    }
+
+    // Кнопка Log Out
+    document.getElementById('logout-btn').addEventListener('click', () => {
+        if (confirm('Are you sure you want to log out?')) {
+            localStorage.removeItem('flowstudy_session');
+            window.location.href = 'auth.html';
         }
     });
 
@@ -662,52 +758,29 @@
 
     toggleBtn.addEventListener('click', () => {
         sidebar.classList.toggle('collapsed');
-        if (sidebar.classList.contains('collapsed')) {
-            toggleIcon.innerHTML = '<polyline points="9 18 15 12 9 6"></polyline>';
-        } else {
-            toggleIcon.innerHTML = '<polyline points="15 18 9 12 15 6"></polyline>';
-        }
+        toggleIcon.innerHTML = sidebar.classList.contains('collapsed') 
+            ? '<polyline points="9 18 15 12 9 6"></polyline>'
+            : '<polyline points="15 18 9 12 15 6"></polyline>';
     });
 
-    // Settings Modal Controls
+    // Modal Controls
     const modalOverlay = document.getElementById('settings-modal-overlay');
     const openSettingsBtn = document.getElementById('open-settings-btn');
     const profileSettingsBtn = document.getElementById('profile-settings-btn');
     const closeModalBtn = document.getElementById('close-modal-btn');
 
-    function openModal() {
-        modalOverlay.classList.add('active');
-    }
+    function openModal() { modalOverlay.classList.add('active'); }
+    function closeModal() { modalOverlay.classList.remove('active'); }
 
-    function closeModal() {
-        modalOverlay.classList.remove('active');
-    }
-
-    openSettingsBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        openModal();
-    });
-
-    profileSettingsBtn.addEventListener('click', () => {
-        openModal();
-    });
-
+    openSettingsBtn.addEventListener('click', (e) => { e.preventDefault(); openModal(); });
+    profileSettingsBtn.addEventListener('click', openModal);
     closeModalBtn.addEventListener('click', closeModal);
 
-    modalOverlay.addEventListener('click', (e) => {
-        if (e.target === modalOverlay) {
-            closeModal();
-        }
-    });
-
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
-            closeModal();
-        }
-    });
+    modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modalOverlay.classList.contains('active')) closeModal(); });
 
     // Modal Tab Switching
-    const tabBtns = document.querySelectorAll('.modal-sidebar .tab-btn');
+    const tabBtns = document.querySelectorAll('.modal-sidebar .tab-btn:not(.logout-btn)');
     const tabPanels = document.querySelectorAll('.tab-panel');
 
     tabBtns.forEach(btn => {
@@ -718,7 +791,12 @@
             tabPanels.forEach(p => p.classList.remove('active'));
 
             btn.classList.add('active');
-            document.getElementById(targetTab).classList.add('active');
+            const panel = document.getElementById(targetTab);
+            if (panel) panel.classList.add('active');
+
+            if (targetTab === 'tab-admin') {
+                renderAdminUsersList();
+            }
         });
     });
 </script>
