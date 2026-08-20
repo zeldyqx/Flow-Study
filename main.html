@@ -361,14 +361,15 @@
         }
 
         .section-label-text {
-            font-size: 1rem;
-            font-weight: 700;
+            font-size: 0.95rem;
+            font-weight: 600;
             color: #0f172a;
+            margin-top: 0.25rem;
         }
 
         .tool-textarea {
             width: 100%;
-            height: 120px;
+            height: 90px;
             padding: 0.75rem;
             border-radius: 8px;
             border: 1px solid #cbd5e1;
@@ -769,9 +770,9 @@
         }
 
         .custom-dialog p {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             color: #64748b;
-            margin-top: -0.5rem;
+            line-height: 1.4;
         }
 
         .custom-dialog-actions {
@@ -966,13 +967,16 @@
                     <p style="color: #64748b; font-size: 0.9rem; margin-top: 0.2rem;">Manage and utilize your available utility tools.</p>
                 </div>
                 
-                <!-- Секция Text и текстовое поле перед кнопками -->
+                <!-- Workspace Container with Prompt & Text fields -->
                 <div class="tools-workspace-container">
+                    <span class="section-label-text">Prompt</span>
+                    <textarea class="tool-textarea" id="tool-prompt-input" placeholder="Type your generation prompt here..."></textarea>
+
                     <span class="section-label-text">Text</span>
                     <textarea class="tool-textarea" id="tool-source-text" placeholder="Enter or paste your text here..."></textarea>
                     
                     <div class="tools-row">
-                        <button class="tool-small-btn" onclick="showToast('Action', 'Triggered Generate', 'info')">Generate</button>
+                        <button class="tool-small-btn" id="generate-btn">Generate</button>
                         <button class="tool-small-btn" onclick="showToast('Action', 'Triggered Humanizer', 'info')">Humanizer</button>
                         <button class="tool-small-btn" onclick="showToast('Action', 'Triggered Shortener', 'info')">Shortener</button>
                         <button class="tool-small-btn" onclick="showToast('Action', 'Triggered Extender', 'info')">Extender</button>
@@ -1019,7 +1023,7 @@
                     <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
 
-                <!-- Panel: General (Активна по дефолту) -->
+                <!-- Panel: General -->
                 <div class="tab-panel active" id="tab-general">
                     <div class="panel-header">
                         <h2>General Settings</h2>
@@ -1027,7 +1031,7 @@
                     </div>
                 </div>
 
-                <!-- Panel: Account (Скрыта по дефолту, открывается только при клике на Account) -->
+                <!-- Panel: Account -->
                 <div class="tab-panel" id="tab-account">
                     <div class="panel-header">
                         <h2>Account Profile</h2>
@@ -1337,6 +1341,43 @@
                 close();
             }
         };
+    }
+
+    // Generate action with overwrite check
+    const generateBtn = document.getElementById('generate-btn');
+    const toolSourceText = document.getElementById('tool-source-text');
+    const toolPromptInput = document.getElementById('tool-prompt-input');
+
+    function performGeneration() {
+        const promptText = toolPromptInput.value.trim();
+        if (!promptText) {
+            showToast('Prompt Required', 'Please enter a prompt before generating.', 'error');
+            return;
+        }
+        // Симуляция генерации текста
+        toolSourceText.value = `Generated response based on prompt: "${promptText}"`;
+        showToast('Success', 'Text successfully generated!', 'success');
+    }
+
+    if (generateBtn && toolSourceText && toolPromptInput) {
+        generateBtn.addEventListener('click', () => {
+            const currentText = toolSourceText.value.trim();
+            if (currentText.length > 0) {
+                // Показываем кастомное окно предупреждения об перезаписи
+                showCustomDialog(`
+                    <h3>Overwrite Current Text?</h3>
+                    <p>Are you sure you want to overwrite your current text?</p>
+                    <div class="custom-dialog-actions">
+                        <button class="btn-secondary dialog-cancel">Cancel</button>
+                        <button class="btn-primary dialog-submit" style="background: #2563eb;">Overwrite</button>
+                    </div>
+                `, () => {
+                    performGeneration();
+                });
+            } else {
+                performGeneration();
+            }
+        });
     }
 
     // Change Email Flow (With Email Code Verification)
