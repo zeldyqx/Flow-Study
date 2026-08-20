@@ -995,7 +995,7 @@
             <!-- Billing Toggle -->
             <div class="billing-toggle">
                 <button class="toggle-btn active" data-period="monthly">Monthly</button>
-                <button class="toggle-btn" data-period="yearly">Yearly (-10%)</button>
+                <button class="toggle-btn" data-period="yearly">Yearly</button>
             </div>
 
             <div class="subs-grid">
@@ -1003,7 +1003,7 @@
                 <div class="sub-card">
                     <h4>Starter</h4>
                     <div class="sub-price">
-                        $<span class="amount" data-monthly="2.99" data-yearly="32.29">2.99</span>
+                        $<span class="amount" data-monthly="2.99" data-yearly="29.99">2.99</span>
                         <span style="font-size: 0.75rem; font-weight: 400; color: #64748b;" class="period">/ mo</span>
                     </div>
                     <div class="sub-desc">Basic core tools for standard organization and simple study tracking.</div>
@@ -1013,7 +1013,7 @@
                 <div class="sub-card">
                     <h4>Pro</h4>
                     <div class="sub-price">
-                        $<span class="amount" data-monthly="8.99" data-yearly="97.09">8.99</span>
+                        $<span class="amount" data-monthly="8.99" data-yearly="99.99">8.99</span>
                         <span style="font-size: 0.75rem; font-weight: 400; color: #64748b;" class="period">/ mo</span>
                     </div>
                     <div class="sub-desc">Essential features for regular users and enhanced productivity.</div>
@@ -1023,7 +1023,7 @@
                 <div class="sub-card popular">
                     <h4>Advanced</h4>
                     <div class="sub-price">
-                        $<span class="amount" data-monthly="19.99" data-yearly="215.89">19.99</span>
+                        $<span class="amount" data-monthly="19.99" data-yearly="199.99">19.99</span>
                         <span style="font-size: 0.75rem; font-weight: 400; color: #64748b;" class="period">/ mo</span>
                     </div>
                     <div class="sub-desc">Advanced tools, priority support, and maximum power.</div>
@@ -1484,7 +1484,7 @@
         subscriptionsModalOverlay.addEventListener('click', (e) => { if (e.target === subscriptionsModalOverlay) closeSubsModal(); });
     }
 
-    // Billing Toggle for Pricing Plans (Monthly / Yearly with 10% discount multiplied by 12)
+    // Billing Toggle for Pricing Plans (Monthly / Yearly)
     const billingToggleButtons = document.querySelectorAll('.billing-toggle .toggle-btn');
     billingToggleButtons.forEach(button => {
         button.addEventListener('click', () => {
