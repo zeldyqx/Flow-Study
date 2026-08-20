@@ -445,12 +445,13 @@
     <script>
         let currentMode = 'signup';
 
+        // Добавлено числовое поле id каждому пользователю
         function getUsersDB() {
             const users = localStorage.getItem('flowstudy_users');
             return users ? JSON.parse(users) : [
-                { username: 'admin', email: 'admin@mail.com', password: 'password123' },
-                { username: 'alex', email: 'alex@mail.com', password: 'password123' },
-                { username: 'kywy', email: 'kywy@mail.com', password: 'password123' }
+                { id: 1001, username: 'admin', email: 'admin@mail.com', password: 'password123' },
+                { id: 1002, username: 'alex', email: 'alex@mail.com', password: 'password123' },
+                { id: 1003, username: 'kywy', email: 'kywy@mail.com', password: 'password123' }
             ];
         }
 
@@ -463,14 +464,14 @@
         function setSession(user) {
             const usernameToSave = user.username || user.name || 'User';
             
-            // Записываем сессию
+            // Записываем сессию с уникальным числовым id
             localStorage.setItem('flowstudy_session', JSON.stringify({
+                id: user.id || Date.now(),
                 username: usernameToSave,
                 email: user.email,
                 isLoggedIn: true
             }));
 
-            // Перезаписываем пользовательское имя в локальном хранилище, чтобы синхронизировать данные
             localStorage.setItem('flowstudy_username', usernameToSave);
 
             window.location.href = 'main.html';
@@ -488,6 +489,7 @@
         window.handleGoogleResponse = function(response) {
             const responsePayload = decodeJwtResponse(response.credential);
             setSession({
+                id: Math.floor(100000 + Math.random() * 900000),
                 username: responsePayload.name,
                 email: responsePayload.email
             });
@@ -697,7 +699,9 @@
                     return;
                 }
 
+                // Генерация цифрового ID для нового пользователя
                 const newUser = {
+                    id: Date.now(),
                     username: usernameInput.value.trim(),
                     email: identifierVal,
                     password: passwordVal
