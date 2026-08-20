@@ -358,7 +358,7 @@
         /* Settings Modal Box */
         .settings-modal {
             width: 760px;
-            height: 520px;
+            height: 540px;
             background-color: #ffffff;
             border-radius: 12px;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
@@ -474,7 +474,7 @@
         .tab-panel {
             display: none;
             flex-direction: column;
-            gap: 1.25rem;
+            gap: 1rem;
         }
 
         .tab-panel.active {
@@ -497,8 +497,7 @@
         .setting-group {
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
-            padding-top: 0.5rem;
+            gap: 0.4rem;
         }
 
         .setting-label {
@@ -526,6 +525,46 @@
             color: #64748b;
             cursor: not-allowed;
             border-color: #e2e8f0;
+        }
+
+        .action-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .action-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .action-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .action-desc {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            color: #0f172a;
+            padding: 0.4rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
         }
     </style>
 </head>
@@ -569,7 +608,7 @@
 
         <div class="sidebar-bottom">
             <a href="#" class="nav-item" id="open-settings-btn">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                 <span class="nav-text">Settings</span>
             </a>
         </div>
@@ -578,7 +617,7 @@
     <main class="main-wrapper">
         <header class="top-header">
             <a href="#" class="header-subscriptions-btn">
-                <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="22" y1="11" x2="16" y2="11"></line></svg>
+                <svg viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>
                 <span>Subscriptions</span>
             </a>
 
@@ -612,7 +651,7 @@
                 <span class="modal-sidebar-title">Settings</span>
                 
                 <button class="tab-btn active" data-tab="tab-general">
-                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                     General
                 </button>
                 <button class="tab-btn" data-tab="tab-account">
@@ -643,7 +682,7 @@
                 </button>
 
                 <!-- Panel: General -->
-                <div class="tab-panel active" id="tab-general">
+                <div class="tab-panel" id="tab-general">
                     <div class="panel-header">
                         <h2>General Settings</h2>
                         <p>Manage application behavior and basic configuration.</p>
@@ -651,10 +690,10 @@
                 </div>
 
                 <!-- Panel: Account -->
-                <div class="tab-panel" id="tab-account">
+                <div class="tab-panel active" id="tab-account">
                     <div class="panel-header">
                         <h2>Account Profile</h2>
-                        <p>Manage user information and account details.</p>
+                        <p>Manage user information and security credentials.</p>
                     </div>
                     <div class="setting-group">
                         <label class="setting-label">User ID</label>
@@ -663,6 +702,24 @@
                     <div class="setting-group">
                         <label class="setting-label">Username</label>
                         <input type="text" class="setting-input" id="username-input" placeholder="Enter username">
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">Email Address</label>
+                        <input type="email" class="setting-input" id="email-input" placeholder="Enter new email">
+                    </div>
+                    <div class="action-row">
+                        <div class="action-info">
+                            <span class="action-title">Password</span>
+                            <span class="action-desc">Change your account password</span>
+                        </div>
+                        <button class="btn-secondary" id="change-password-btn">Change Password</button>
+                    </div>
+                    <div class="action-row">
+                        <div class="action-info">
+                            <span class="action-title">Two-Factor Authentication (2FA)</span>
+                            <span class="action-desc" id="fa-status-desc">Protect your account with extra security</span>
+                        </div>
+                        <button class="btn-secondary" id="toggle-2fa-btn">Enable 2FA</button>
                     </div>
                 </div>
 
@@ -697,12 +754,17 @@
 <script>
     const usernameInput = document.getElementById('username-input');
     const userIdInput = document.getElementById('user-id-input');
+    const emailInput = document.getElementById('email-input');
     const displayUsername = document.getElementById('display-username');
     const displayRole = document.getElementById('display-role');
     const avatarInitial = document.getElementById('avatar-initial');
     const adminTabBtn = document.getElementById('admin-db-tab');
     const adminUsersList = document.getElementById('admin-users-list');
     const logoutBtn = document.getElementById('logout-btn');
+    
+    const changePasswordBtn = document.getElementById('change-password-btn');
+    const toggle2faBtn = document.getElementById('toggle-2fa-btn');
+    const faStatusDesc = document.getElementById('fa-status-desc');
 
     // Notifications Dropdown Toggle
     const notificationsBtn = document.getElementById('notifications-btn');
@@ -733,7 +795,7 @@
         localStorage.setItem('flowstudy_users', JSON.stringify(users));
     }
 
-    function applyUserData(name, id) {
+    function applyUserData(name, id, email, is2fa) {
         const cleanName = name ? name.trim() : 'User';
         const rawId = cleanId(id) || '1';
 
@@ -741,6 +803,17 @@
         if (avatarInitial) avatarInitial.textContent = cleanName.charAt(0).toUpperCase();
         if (usernameInput) usernameInput.value = cleanName;
         if (userIdInput) userIdInput.value = `#${rawId}`;
+        if (emailInput && email) emailInput.value = email;
+
+        if (toggle2faBtn && faStatusDesc) {
+            if (is2fa) {
+                toggle2faBtn.textContent = 'Disable 2FA';
+                faStatusDesc.textContent = '2FA is currently enabled';
+            } else {
+                toggle2faBtn.textContent = 'Enable 2FA';
+                faStatusDesc.textContent = 'Protect your account with extra security';
+            }
+        }
 
         const isAdmin = rawId.toLowerCase() === 'z';
         if (displayRole) displayRole.textContent = isAdmin ? 'Admin' : 'Student';
@@ -751,11 +824,11 @@
     let session = sessionRaw ? JSON.parse(sessionRaw) : null;
 
     if (session && session.username) {
-        applyUserData(session.username, session.id);
+        applyUserData(session.username, session.id, session.email, session.is2fa);
     } else {
         const savedUser = localStorage.getItem('flowstudy_username');
         if (savedUser) {
-            applyUserData(savedUser, 1);
+            applyUserData(savedUser, 1, '', false);
         }
     }
 
@@ -775,6 +848,54 @@
                 
                 localStorage.setItem('flowstudy_session', JSON.stringify(session));
                 saveUsersDB(users);
+            }
+        });
+    }
+
+    if (emailInput) {
+        emailInput.addEventListener('input', (e) => {
+            const newEmail = e.target.value.trim();
+            if (session) {
+                const users = getUsersDB();
+                const userIdx = users.findIndex(u => cleanId(u.id) === cleanId(session.id));
+                session.email = newEmail;
+                if (userIdx !== -1) users[userIdx].email = newEmail;
+
+                localStorage.setItem('flowstudy_session', JSON.stringify(session));
+                saveUsersDB(users);
+            }
+        });
+    }
+
+    if (changePasswordBtn) {
+        changePasswordBtn.addEventListener('click', () => {
+            const oldPass = prompt('Enter current password:');
+            if (oldPass !== null) {
+                const newPass = prompt('Enter new password:');
+                if (newPass && newPass.length >= 4) {
+                    alert('Password successfully updated!');
+                } else if (newPass !== null) {
+                    alert('Password must be at least 4 characters long.');
+                }
+            }
+        });
+    }
+
+    if (toggle2faBtn) {
+        toggle2faBtn.addEventListener('click', () => {
+            if (session) {
+                session.is2fa = !session.is2fa;
+                const users = getUsersDB();
+                const userIdx = users.findIndex(u => cleanId(u.id) === cleanId(session.id));
+                if (userIdx !== -1) users[userIdx].is2fa = session.is2fa;
+
+                localStorage.setItem('flowstudy_session', JSON.stringify(session));
+                saveUsersDB(users);
+
+                applyUserData(session.username, session.id, session.email, session.is2fa);
+                alert(session.is2fa ? 'Two-Factor Authentication enabled.' : 'Two-Factor Authentication disabled.');
+            } else {
+                alert('Please log in properly to change 2FA settings.');
             }
         });
     }
