@@ -34,7 +34,6 @@
             position: relative;
         }
 
-        /* Collapsed State */
         .sidebar.collapsed {
             width: 72px;
         }
@@ -274,6 +273,195 @@
             flex: 1;
             background-color: #ffffff;
         }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(2px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Settings Modal Box */
+        .settings-modal {
+            width: 760px;
+            height: 520px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            display: flex;
+            overflow: hidden;
+            border: 1px solid #e4e4e7;
+            transform: scale(0.96);
+            transition: transform 0.2s ease;
+            position: relative;
+        }
+
+        .modal-overlay.active .settings-modal {
+            transform: scale(1);
+        }
+
+        /* Modal Sidebar Tabs */
+        .modal-sidebar {
+            width: 220px;
+            background-color: #f8fafc;
+            border-right: 1px solid #e2e8f0;
+            padding: 1.25rem 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .modal-sidebar-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #94a3b8;
+            padding: 0.5rem 0.75rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .tab-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem 0.75rem;
+            border-radius: 8px;
+            border: none;
+            background: none;
+            color: #64748b;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.15s ease;
+        }
+
+        .tab-btn:hover {
+            color: #0f172a;
+            background-color: #f1f5f9;
+        }
+
+        .tab-btn.active {
+            color: #0f172a;
+            background-color: #e2e8f0;
+            font-weight: 600;
+        }
+
+        .tab-btn svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* Modal Body Content */
+        .modal-content-area {
+            flex: 1;
+            padding: 1.75rem 2rem;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-y: auto;
+        }
+
+        .close-modal-btn {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            background: none;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            padding: 0.4rem;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .close-modal-btn:hover {
+            background-color: #f1f5f9;
+            color: #0f172a;
+        }
+
+        .close-modal-btn svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .tab-panel {
+            display: none;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .tab-panel.active {
+            display: flex;
+        }
+
+        .panel-header h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0f172a;
+            letter-spacing: -0.01em;
+        }
+
+        .panel-header p {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 0.2rem;
+        }
+
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding-top: 0.5rem;
+        }
+
+        .setting-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .setting-input {
+            width: 100%;
+            padding: 0.55rem 0.75rem;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            font-size: 0.875rem;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .setting-input:focus {
+            border-color: #0f172a;
+        }
     </style>
 </head>
 <body>
@@ -315,7 +503,7 @@
         </div>
 
         <div class="sidebar-bottom">
-            <a href="#" class="nav-item" id="settings-btn">
+            <a href="#" class="nav-item" id="open-settings-btn">
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                 <span class="nav-text">Settings</span>
             </a>
@@ -329,7 +517,7 @@
                 <span class="badge-dot"></span>
             </button>
 
-            <button class="profile-btn">
+            <button class="profile-btn" id="profile-settings-btn">
                 <div class="avatar">K</div>
                 <div class="profile-info">
                     <span class="profile-name">Kywy</span>
@@ -342,19 +530,148 @@
         </section>
     </main>
 
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settings-modal-overlay">
+        <div class="settings-modal">
+            <aside class="modal-sidebar">
+                <span class="modal-sidebar-title">Settings</span>
+                
+                <button class="tab-btn active" data-tab="tab-general">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    General
+                </button>
+                <button class="tab-btn" data-tab="tab-account">
+                    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    Account
+                </button>
+                <button class="tab-btn" data-tab="tab-appearance">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path></svg>
+                    Appearance
+                </button>
+                <button class="tab-btn" data-tab="tab-notifications">
+                    <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                    Notifications
+                </button>
+            </aside>
+
+            <main class="modal-content-area">
+                <button class="close-modal-btn" id="close-modal-btn" aria-label="Close Settings">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+
+                <!-- Panel: General -->
+                <div class="tab-panel active" id="tab-general">
+                    <div class="panel-header">
+                        <h2>General Settings</h2>
+                        <p>Manage application behavior and basic configuration.</p>
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">App Title</label>
+                        <input type="text" class="setting-input" value="Flow Study">
+                    </div>
+                </div>
+
+                <!-- Panel: Account -->
+                <div class="tab-panel" id="tab-account">
+                    <div class="panel-header">
+                        <h2>Account Profile</h2>
+                        <p>Manage user information and account details.</p>
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">Username</label>
+                        <input type="text" class="setting-input" value="Kywy">
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">Role</label>
+                        <input type="text" class="setting-input" value="Developer">
+                    </div>
+                </div>
+
+                <!-- Panel: Appearance -->
+                <div class="tab-panel" id="tab-appearance">
+                    <div class="panel-header">
+                        <h2>Appearance</h2>
+                        <p>Customize how Flow Study looks on your screen.</p>
+                    </div>
+                </div>
+
+                <!-- Panel: Notifications -->
+                <div class="tab-panel" id="tab-notifications">
+                    <div class="panel-header">
+                        <h2>Notification Preferences</h2>
+                        <p>Configure how and when you receive alerts.</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
     <script>
+        // Sidebar Toggle
         const sidebar = document.getElementById('sidebar');
         const toggleBtn = document.getElementById('toggle-btn');
         const toggleIcon = document.getElementById('toggle-icon');
 
         toggleBtn.addEventListener('click', () => {
             sidebar.classList.toggle('collapsed');
-            
             if (sidebar.classList.contains('collapsed')) {
                 toggleIcon.innerHTML = '<polyline points="9 18 15 12 9 6"></polyline>';
             } else {
                 toggleIcon.innerHTML = '<polyline points="15 18 9 12 15 6"></polyline>';
             }
+        });
+
+        // Settings Modal Controls
+        const modalOverlay = document.getElementById('settings-modal-overlay');
+        const openSettingsBtn = document.getElementById('open-settings-btn');
+        const profileSettingsBtn = document.getElementById('profile-settings-btn');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+
+        function openModal() {
+            modalOverlay.classList.add('active');
+        }
+
+        function closeModal() {
+            modalOverlay.classList.remove('active');
+        }
+
+        openSettingsBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            openModal();
+        });
+
+        profileSettingsBtn.addEventListener('click', () => {
+            openModal();
+        });
+
+        closeModalBtn.addEventListener('click', closeModal);
+
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                closeModal();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
+                closeModal();
+            }
+        });
+
+        // Modal Tab Switching
+        const tabBtns = document.querySelectorAll('.modal-sidebar .tab-btn');
+        const tabPanels = document.querySelectorAll('.tab-panel');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetTab = btn.getAttribute('data-tab');
+
+                tabBtns.forEach(b => b.classList.remove('active'));
+                tabPanels.forEach(p => p.classList.remove('active'));
+
+                btn.classList.add('active');
+                document.getElementById(targetTab).classList.add('active');
+            });
         });
     </script>
 
