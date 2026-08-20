@@ -179,6 +179,41 @@
             background-color: #ffffff;
         }
 
+        .header-subscriptions-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: none;
+            border: 1px solid #e4e4e7;
+            color: #333333;
+            padding: 0.45rem 0.75rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .header-subscriptions-btn:hover {
+            background: #f4f4f5;
+            border-color: #d4d4d8;
+        }
+
+        .header-subscriptions-btn svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .icon-btn-wrapper {
+            position: relative;
+        }
+
         .icon-btn {
             background: none;
             border: none;
@@ -190,7 +225,6 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            position: relative;
             transition: all 0.2s ease;
         }
 
@@ -209,15 +243,39 @@
             stroke-linejoin: round;
         }
 
-        .badge-dot {
+        /* Notifications Dropdown */
+        .notifications-dropdown {
             position: absolute;
-            top: 9px;
-            right: 9px;
-            width: 8px;
-            height: 8px;
-            background-color: #ef4444;
-            border-radius: 50%;
-            border: 2px solid #ffffff;
+            top: 48px;
+            right: 0;
+            width: 300px;
+            background: #ffffff;
+            border: 1px solid #e4e4e7;
+            border-radius: 10px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            display: none;
+            flex-direction: column;
+            z-index: 50;
+            overflow: hidden;
+        }
+
+        .notifications-dropdown.active {
+            display: flex;
+        }
+
+        .notifications-header {
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #0f172a;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .notifications-body {
+            padding: 1rem;
+            font-size: 0.85rem;
+            color: #64748b;
+            text-align: center;
         }
 
         /* Profile Button */
@@ -506,12 +564,6 @@
                         <span class="nav-text">Schedule</span>
                     </a>
                 </li>
-                <li>
-                    <a href="#" class="nav-item">
-                        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="22" y1="11" x2="16" y2="11"></line></svg>
-                        <span class="nav-text">Subscriptions</span>
-                    </a>
-                </li>
             </ul>
         </div>
 
@@ -525,10 +577,20 @@
 
     <main class="main-wrapper">
         <header class="top-header">
-            <button class="icon-btn" aria-label="Notifications">
-                <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-                <span class="badge-dot"></span>
-            </button>
+            <a href="#" class="header-subscriptions-btn">
+                <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="22" y1="11" x2="16" y2="11"></line></svg>
+                <span>Subscriptions</span>
+            </a>
+
+            <div class="icon-btn-wrapper">
+                <button class="icon-btn" id="notifications-btn" aria-label="Notifications">
+                    <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                </button>
+                <div class="notifications-dropdown" id="notifications-dropdown">
+                    <div class="notifications-header">Notifications</div>
+                    <div class="notifications-body">No new notifications</div>
+                </div>
+            </div>
 
             <button class="profile-btn" id="profile-settings-btn">
                 <div class="avatar" id="avatar-initial">U</div>
@@ -586,10 +648,6 @@
                         <h2>General Settings</h2>
                         <p>Manage application behavior and basic configuration.</p>
                     </div>
-                    <div class="setting-group">
-                        <label class="setting-label">App Title</label>
-                        <input type="text" class="setting-input" value="Flow Study">
-                    </div>
                 </div>
 
                 <!-- Panel: Account -->
@@ -646,6 +704,22 @@
     const adminUsersList = document.getElementById('admin-users-list');
     const logoutBtn = document.getElementById('logout-btn');
 
+    // Notifications Dropdown Toggle
+    const notificationsBtn = document.getElementById('notifications-btn');
+    const notificationsDropdown = document.getElementById('notifications-dropdown');
+
+    if (notificationsBtn && notificationsDropdown) {
+        notificationsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            notificationsDropdown.classList.toggle('active');
+        });
+        document.addEventListener('click', (e) => {
+            if (!notificationsDropdown.contains(e.target) && !notificationsBtn.contains(e.target)) {
+                notificationsDropdown.classList.remove('active');
+            }
+        });
+    }
+
     function cleanId(id) {
         return String(id || '').replace(/^#/, '').trim();
     }
@@ -673,7 +747,6 @@
         if (adminTabBtn) adminTabBtn.style.display = isAdmin ? 'flex' : 'none';
     }
 
-    // Загрузка сессии
     const sessionRaw = localStorage.getItem('flowstudy_session');
     let session = sessionRaw ? JSON.parse(sessionRaw) : null;
 
@@ -686,7 +759,6 @@
         }
     }
 
-    // Изменение Username
     if (usernameInput) {
         usernameInput.addEventListener('input', (e) => {
             const newName = e.target.value.trim() || 'User';
@@ -707,7 +779,6 @@
         });
     }
 
-    // Отрисовка списка пользователей для админа
     function renderAdminUsersList() {
         if (!adminUsersList) return;
         const users = getUsersDB();
@@ -759,7 +830,6 @@
         });
     }
 
-    // Кнопка Logout
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
             if (confirm('Are you sure you want to log out?')) {
@@ -769,7 +839,6 @@
         });
     }
 
-    // Sidebar Toggle
     const sidebar = document.getElementById('sidebar');
     const toggleBtn = document.getElementById('toggle-btn');
     const toggleIcon = document.getElementById('toggle-icon');
@@ -779,13 +848,12 @@
             sidebar.classList.toggle('collapsed');
             if (toggleIcon) {
                 toggleIcon.innerHTML = sidebar.classList.contains('collapsed') 
-                    ? '<polyline points="9 18 15 12 9 6"></polyline>'
+                    ? '<polyline points="9 18 15 12 9 6"></polyline>' 
                     : '<polyline points="15 18 9 12 15 6"></polyline>';
             }
         });
     }
 
-    // Modal Controls
     const modalOverlay = document.getElementById('settings-modal-overlay');
     const openSettingsBtn = document.getElementById('open-settings-btn');
     const profileSettingsBtn = document.getElementById('profile-settings-btn');
@@ -806,7 +874,6 @@
         if (e.key === 'Escape' && modalOverlay && modalOverlay.classList.contains('active')) closeModal(); 
     });
 
-    // Переключение вкладок в модальном окне
     const tabBtns = document.querySelectorAll('.modal-sidebar .tab-btn');
     const tabPanels = document.querySelectorAll('.tab-panel');
 
