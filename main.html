@@ -518,10 +518,10 @@
             </button>
 
             <button class="profile-btn" id="profile-settings-btn">
-                <div class="avatar">K</div>
+                <div class="avatar" id="avatar-initial">U</div>
                 <div class="profile-info">
-                    <span class="profile-name">Kywy</span>
-                    <span class="profile-role">Developer</span>
+                    <span class="profile-name" id="display-username">User</span>
+                    <span class="profile-role">Student</span>
                 </div>
             </button>
         </header>
@@ -579,11 +579,7 @@
                     </div>
                     <div class="setting-group">
                         <label class="setting-label">Username</label>
-                        <input type="text" class="setting-input" value="Kywy">
-                    </div>
-                    <div class="setting-group">
-                        <label class="setting-label">Role</label>
-                        <input type="text" class="setting-input" value="Developer">
+                        <input type="text" class="setting-input" id="username-input" placeholder="Enter username">
                     </div>
                 </div>
 
@@ -607,6 +603,31 @@
     </div>
 
     <script>
+        // User Profile & Storage Logic
+        const usernameInput = document.getElementById('username-input');
+        const displayUsername = document.getElementById('display-username');
+        const avatarInitial = document.getElementById('avatar-initial');
+
+        function updateUsernameUI(name) {
+            const cleanName = name.trim() || 'User';
+            displayUsername.textContent = cleanName;
+            avatarInitial.textContent = cleanName.charAt(0).toUpperCase();
+            usernameInput.value = cleanName;
+        }
+
+        const savedUser = localStorage.getItem('flowstudy_username');
+        if (savedUser) {
+            updateUsernameUI(savedUser);
+        } else {
+            updateUsernameUI('User');
+        }
+
+        usernameInput.addEventListener('input', (e) => {
+            const newName = e.target.value;
+            updateUsernameUI(newName);
+            localStorage.setItem('flowstudy_username', newName);
+        });
+
         // Sidebar Toggle
         const sidebar = document.getElementById('sidebar');
         const toggleBtn = document.getElementById('toggle-btn');
