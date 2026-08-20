@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flow Study — Auth</title>
+    <!-- Google Identity Services SDK -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         * {
             margin: 0;
@@ -155,31 +157,11 @@
             font-size: 0.85rem;
         }
 
-        .google-btn {
+        .google-btn-container {
             width: 100%;
+            min-height: 40px;
             display: flex;
-            align-items: center;
             justify-content: center;
-            gap: 0.6rem;
-            padding: 0.7rem;
-            background: #ffffff;
-            border: 1px solid #dddddd;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: #333333;
-            cursor: pointer;
-            transition: background 0.2s, border-color 0.2s;
-        }
-
-        .google-btn:hover {
-            background: #f8f8f8;
-            border-color: #bbbbbb;
-        }
-
-        .google-btn svg {
-            width: 18px;
-            height: 18px;
         }
 
         .divider {
@@ -399,15 +381,21 @@
                 </p>
             </div>
 
-            <button type="button" class="google-btn" id="google-btn">
-                <svg viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-                </svg>
-                Continue with Google
-            </button>
+            <div class="google-btn-container" id="google-btn-container">
+                <div id="g_id_onload"
+                     data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+                     data-callback="handleGoogleResponse">
+                </div>
+                <div class="g_id_signin" 
+                     data-type="standard" 
+                     data-shape="rectangular" 
+                     data-theme="outline" 
+                     data-text="continue_with" 
+                     data-size="large" 
+                     data-logo_alignment="left"
+                     data-width="340">
+                </div>
+            </div>
 
             <div class="divider" id="divider">
                 <span>OR</span>
@@ -434,7 +422,7 @@
                             </svg>
                         </button>
                     </div>
-                    <span class="status-msg"></span>
+                    <span class="status-msg" id="password-status"></span>
                 </div>
 
                 <div class="input-options" id="login-options" style="display: none;">
@@ -457,15 +445,56 @@
     <script>
         let currentMode = 'signup';
 
-        const takenUsernames = ['admin', 'alex', 'kywy'];
-        const takenEmails = ['test@mail.com', 'user@gmail.com'];
+        // Инициализация базы данных пользователей в localStorage
+        function getUsersDB() {
+            const users = localStorage.getItem('flowstudy_users');
+            return users ? JSON.parse(users) : [
+                { username: 'admin', email: 'admin@mail.com', password: 'password123' },
+                { username: 'alex', email: 'alex@mail.com', password: 'password123' },
+                { username: 'kywy', email: 'kywy@mail.com', password: 'password123' }
+            ];
+        }
+
+        function saveUserToDB(newUser) {
+            const users = getUsersDB();
+            users.push(newUser);
+            localStorage.setItem('flowstudy_users', JSON.stringify(users));
+        }
+
+        function setSession(user) {
+            localStorage.setItem('flowstudy_session', JSON.stringify({
+                username: user.username || user.name || 'User',
+                email: user.email,
+                isLoggedIn: true
+            }));
+            window.location.href = 'main.html';
+        }
+
+        // Парсинг JWT от Google
+        function decodeJwtResponse(token) {
+            let base64Url = token.split('.')[1];
+            let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            let jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+        }
+
+        // Callback при успешной Google-авторизации
+        window.handleGoogleResponse = function(response) {
+            const responsePayload = decodeJwtResponse(response.credential);
+            setSession({
+                username: responsePayload.name,
+                email: responsePayload.email
+            });
+        };
 
         const form = document.getElementById('auth-form');
         const title = document.getElementById('form-title');
         const prompt = document.getElementById('form-prompt');
         const toggleBtn = document.getElementById('toggle-btn');
         const backBtn = document.getElementById('back-btn');
-        const googleBtn = document.getElementById('google-btn');
+        const googleBtnContainer = document.getElementById('google-btn-container');
         const divider = document.getElementById('divider');
 
         const usernameGroup = document.getElementById('username-group');
@@ -477,6 +506,7 @@
         const passwordInput = document.getElementById('password');
         const usernameStatus = document.getElementById('username-status');
         const loginStatus = document.getElementById('login-status');
+        const passwordStatus = document.getElementById('password-status');
 
         const togglePasswordBtn = document.getElementById('toggle-password-btn');
         const eyeIcon = document.getElementById('eye-icon');
@@ -501,6 +531,7 @@
             currentMode = mode;
             loginStatus.textContent = '';
             usernameStatus.textContent = '';
+            passwordStatus.textContent = '';
 
             if (mode === 'signup') {
                 backBtn.style.display = 'none';
@@ -508,14 +539,14 @@
                 prompt.style.display = 'block';
                 prompt.childNodes[0].textContent = 'Already have an account? ';
                 toggleBtn.textContent = 'Log in';
-                googleBtn.style.display = 'flex';
+                googleBtnContainer.style.display = 'flex';
                 divider.style.display = 'flex';
                 
                 usernameGroup.classList.remove('collapsed');
                 passwordGroup.classList.remove('collapsed');
                 
                 loginInput.placeholder = 'Email address';
-                loginOptions.style.display = 'none'; // Полностью скрыт в Sign Up
+                loginOptions.style.display = 'none';
                 
                 termsText.style.display = 'block';
                 submitBtn.textContent = 'Create Account';
@@ -525,14 +556,14 @@
                 prompt.style.display = 'block';
                 prompt.childNodes[0].textContent = "Don't have an account? ";
                 toggleBtn.textContent = 'Sign up';
-                googleBtn.style.display = 'flex';
+                googleBtnContainer.style.display = 'flex';
                 divider.style.display = 'flex';
 
                 usernameGroup.classList.add('collapsed');
                 passwordGroup.classList.remove('collapsed');
 
                 loginInput.placeholder = 'Username or Email';
-                loginOptions.style.display = 'flex'; // Отображается только в Log In
+                loginOptions.style.display = 'flex';
                 rememberMeLabel.style.display = 'flex';
                 forgotPasswordLink.style.display = 'inline';
 
@@ -542,7 +573,7 @@
                 backBtn.style.display = 'inline-flex';
                 title.textContent = 'Reset Password';
                 prompt.style.display = 'none';
-                googleBtn.style.display = 'none';
+                googleBtnContainer.style.display = 'none';
                 divider.style.display = 'none';
 
                 usernameGroup.classList.add('collapsed');
@@ -570,6 +601,8 @@
 
         function validateIdentifier() {
             const val = loginInput.value.trim();
+            const users = getUsersDB();
+
             if (!val) {
                 loginStatus.textContent = '';
                 return false;
@@ -582,7 +615,7 @@
                     return false;
                 }
                 if (currentMode === 'signup') {
-                    if (takenEmails.includes(val.toLowerCase())) {
+                    if (users.some(u => u.email.toLowerCase() === val.toLowerCase())) {
                         loginStatus.textContent = 'Email is already registered';
                         loginStatus.className = 'status-msg taken';
                         return false;
@@ -602,6 +635,7 @@
         function validateUsername() {
             if (currentMode !== 'signup') return true;
             const val = usernameInput.value.trim();
+            const users = getUsersDB();
 
             if (!val) {
                 usernameStatus.textContent = '';
@@ -614,7 +648,7 @@
                 return false;
             }
 
-            if (takenUsernames.includes(val.toLowerCase())) {
+            if (users.some(u => u.username.toLowerCase() === val.toLowerCase())) {
                 usernameStatus.textContent = 'Username is already taken';
                 usernameStatus.className = 'status-msg invalid';
                 return false;
@@ -636,7 +670,8 @@
 
         form.addEventListener('submit', (e) => {
             e.preventDefault();
-            
+            const users = getUsersDB();
+
             if (currentMode === 'forgot') {
                 if (!validateIdentifier()) return;
                 alert(`Password reset link has been sent to ${loginInput.value.trim()}`);
@@ -644,16 +679,49 @@
                 return;
             }
 
-            const isLoginValid = validateIdentifier();
-            const isUsernameValid = validateUsername();
+            const identifierVal = loginInput.value.trim();
+            const passwordVal = passwordInput.value;
 
-            if (!isLoginValid || (currentMode === 'signup' && !isUsernameValid)) {
-                return;
+            if (currentMode === 'signup') {
+                const isLoginValid = validateIdentifier();
+                const isUsernameValid = validateUsername();
+
+                if (!isLoginValid || !isUsernameValid) return;
+                if (!passwordVal) {
+                    passwordStatus.textContent = 'Password is required';
+                    passwordStatus.className = 'status-msg invalid';
+                    return;
+                }
+
+                const newUser = {
+                    username: usernameInput.value.trim(),
+                    email: identifierVal,
+                    password: passwordVal
+                };
+
+                saveUserToDB(newUser);
+                setSession(newUser);
+            } else {
+                if (!identifierVal || !passwordVal) {
+                    passwordStatus.textContent = 'Please fill in all fields';
+                    passwordStatus.className = 'status-msg invalid';
+                    return;
+                }
+
+                const user = users.find(u => 
+                    (u.email.toLowerCase() === identifierVal.toLowerCase() || 
+                     u.username.toLowerCase() === identifierVal.toLowerCase()) && 
+                    u.password === passwordVal
+                );
+
+                if (user) {
+                    setSession(user);
+                } else {
+                    passwordStatus.textContent = 'Invalid username/email or password';
+                    passwordStatus.className = 'status-msg invalid';
+                }
             }
-
-            alert(currentMode === 'signup' ? 'Account created successfully!' : 'Logged in successfully!');
         });
     </script>
-
 </body>
 </html>
