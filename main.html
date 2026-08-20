@@ -624,7 +624,7 @@
         displayUsername.textContent = cleanName;
         avatarInitial.textContent = cleanName.charAt(0).toUpperCase();
         usernameInput.value = cleanName;
-        if (id) userIdInput.value = id;
+        userIdInput.value = id !== undefined && id !== null ? `#${id}` : '#1';
     }
 
     const sessionRaw = localStorage.getItem('flowstudy_session');
@@ -635,7 +635,7 @@
     } else {
         const savedUser = localStorage.getItem('flowstudy_username');
         if (savedUser) {
-            applyUserData(savedUser, null);
+            applyUserData(savedUser, 1);
         } else {
             window.location.href = 'auth.html';
         }
@@ -722,5 +722,3 @@
         });
     });
 </script>
-</body>
-</html>
