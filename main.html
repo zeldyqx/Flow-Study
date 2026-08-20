@@ -352,11 +352,41 @@
             display: flex;
         }
 
-        /* 4 Small Buttons in a Row (Tools Workspace) */
+        /* Tools Workspace & Section Text Area */
+        .tools-workspace-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            max-width: 600px;
+        }
+
+        .section-label-text {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .tool-textarea {
+            width: 100%;
+            height: 120px;
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            font-size: 0.9rem;
+            outline: none;
+            resize: vertical;
+            transition: border-color 0.2s ease;
+        }
+
+        .tool-textarea:focus {
+            border-color: #0f172a;
+        }
+
+        /* 4 Small Buttons in a Row */
         .tools-row {
             display: flex;
             gap: 10px;
-            margin-top: 0.5rem;
+            margin-top: 0.25rem;
         }
 
         .tool-small-btn {
@@ -935,11 +965,18 @@
                     <h1 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">Tools</h1>
                     <p style="color: #64748b; font-size: 0.9rem; margin-top: 0.2rem;">Manage and utilize your available utility tools.</p>
                 </div>
-                <div class="tools-row">
-                    <button class="tool-small-btn" onclick="showToast('Action', 'Triggered Generate', 'info')">Generate</button>
-                    <button class="tool-small-btn" onclick="showToast('Action', 'Triggered Humanizer', 'info')">Humanizer</button>
-                    <button class="tool-small-btn" onclick="showToast('Action', 'Triggered Shortener', 'info')">Shortener</button>
-                    <button class="tool-small-btn" onclick="showToast('Action', 'Triggered Extender', 'info')">Extender</button>
+                
+                <!-- Секция Text и текстовое поле перед кнопками -->
+                <div class="tools-workspace-container">
+                    <span class="section-label-text">Text</span>
+                    <textarea class="tool-textarea" id="tool-source-text" placeholder="Enter or paste your text here..."></textarea>
+                    
+                    <div class="tools-row">
+                        <button class="tool-small-btn" onclick="showToast('Action', 'Triggered Generate', 'info')">Generate</button>
+                        <button class="tool-small-btn" onclick="showToast('Action', 'Triggered Humanizer', 'info')">Humanizer</button>
+                        <button class="tool-small-btn" onclick="showToast('Action', 'Triggered Shortener', 'info')">Shortener</button>
+                        <button class="tool-small-btn" onclick="showToast('Action', 'Triggered Extender', 'info')">Extender</button>
+                    </div>
                 </div>
             </div>
         </section>
@@ -982,16 +1019,16 @@
                     <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
 
-                <!-- Panel: General -->
-                <div class="tab-panel" id="tab-general">
+                <!-- Panel: General (Активна по дефолту) -->
+                <div class="tab-panel active" id="tab-general">
                     <div class="panel-header">
                         <h2>General Settings</h2>
                         <p>Manage application behavior and basic configuration.</p>
                     </div>
                 </div>
 
-                <!-- Panel: Account -->
-                <div class="tab-panel active" id="tab-account">
+                <!-- Panel: Account (Скрыта по дефолту, открывается только при клике на Account) -->
+                <div class="tab-panel" id="tab-account">
                     <div class="panel-header">
                         <h2>Account Profile</h2>
                         <p>Manage user information and security credentials.</p>
