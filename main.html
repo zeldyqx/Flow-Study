@@ -391,7 +391,7 @@
             border-color: #0f172a;
         }
 
-        /* 4 Small Buttons in a Row */
+        /* Small Buttons in a Row */
         .tools-row {
             display: flex;
             gap: 10px;
@@ -988,10 +988,10 @@
                 <!-- Workspace Container with Prompt & Text fields -->
                 <div class="tools-workspace-container">
                     <span class="section-label-text">Prompt</span>
-                    <textarea class="tool-textarea" id="tool-prompt-input" placeholder="Введите тему для конспекта (например: Основы квантовой физики, Архитектура микропроцессоров)..."></textarea>
+                    <textarea class="tool-textarea" id="tool-prompt-input" placeholder="Enter topic or prompt (e.g., Quantum Computing, Assembly Memory Management)..."></textarea>
 
-                    <span class="section-label-text">Generated Study Notes (Конспект)</span>
-                    <textarea class="tool-textarea" id="tool-source-text" placeholder="Здесь появится готовый конспект после нажатия Generate..."></textarea>
+                    <span class="section-label-text">Generated Study Notes</span>
+                    <textarea class="tool-textarea" id="tool-source-text" placeholder="Generated study notes will appear here..."></textarea>
                     
                     <div class="tools-row">
                         <button class="tool-small-btn" id="generate-btn">Generate</button>
@@ -1361,7 +1361,7 @@
         };
     }
 
-    // Smart Study Notes Generation based on prompt topic
+    // Dynamic Study Notes Generator based on prompt topic
     const generateBtn = document.getElementById('generate-btn');
     const toolSourceText = document.getElementById('tool-source-text');
     const toolPromptInput = document.getElementById('tool-prompt-input');
@@ -1369,44 +1369,43 @@
     function performGeneration() {
         const promptText = toolPromptInput.value.trim();
         if (!promptText) {
-            showToast('Prompt Required', 'Введите тему конспекта в поле промпта.', 'error');
+            showToast('Prompt Required', 'Please enter a topic in the prompt field first.', 'error');
             return;
         }
 
-        // Генерация структурированного конспекта на основе темы
-        const capitalizedTopic = promptText.charAt(0).toUpperCase() + promptText.slice(1);
-        const generatedNotes = `КОНСПЕКТ: ${capitalizedTopic.toUpperCase()}
+        // Dynamic generation parsing topic keywords
+        const upperTopic = promptText.toUpperCase();
+        const generatedNotes = `STUDY NOTES: ${upperTopic}
 
-1. Введение и основные понятия
-- Определение и ключевые принципы темы "${capitalizedTopic}".
-- Исторический контекст и значение для современной науки/разработки.
-- Базовая терминология, необходимая для глубокого понимания.
+1. CORE DEFINITION & OVERVIEW
+- Introduction to ${promptText}: foundational principles, concepts, and key mechanics.
+- Practical relevance in modern workflows, systems, and advanced engineering.
+- Essential terminology: components, definitions, and operational scope.
 
-2. Ключевые аспекты и архитектура
-- Основные компоненты, модули и их взаимодействие.
-- Закономерности, формулы или алгоритмы (в зависимости от контекста).
-- Практические примеры применения в реальных условиях.
+2. TECHNICAL ARCHITECTURE & KEY MECHANISMS
+- Structural breakdown: primary modules, execution flow, and core interactions.
+- Performance variables, optimization strategies, and bottleneck management.
+- Implementation patterns and standard industry configurations.
 
-3. Плюсы, минусы и подводные камни
-- Преимущества подхода/технологии: высокая эффективность, масштабируемость.
-- Возможные трудности, ограничения и частые ошибки при изучении или реализации.
+3. ADVANTAGES & POTENTIAL CHALLENGE AREAS
+- Key benefits: high efficiency, speed optimization, and robust scalability.
+- Common edge cases, syntax pitfalls, debugging constraints, and anti-patterns.
 
-4. Итоги и выводы
-- Краткое резюме изученного материала.
-- Рекомендации для дальнейшего углубленного изучения.`;
+4. EXECUTIVE SUMMARY & TAKEAWAYS
+- Final overview of ${promptText} core takeaways.
+- Recommended practical exercises and further documentation review paths.`;
 
         toolSourceText.value = generatedNotes;
-        showToast('Success', 'Конспект успешно сгенерирован!', 'success');
+        showToast('Success', 'Study notes generated successfully!', 'success');
     }
 
     if (generateBtn && toolSourceText && toolPromptInput) {
         generateBtn.addEventListener('click', () => {
             const currentText = toolSourceText.value.trim();
             if (currentText.length > 0) {
-                // Кастомное окно подтверждения перезаписи
                 showCustomDialog(`
-                    <h3>Overwrite Current Text?</h3>
-                    <p>Are you sure you want to overwrite your current text?</p>
+                    <h3>Overwrite Current Notes?</h3>
+                    <p>Are you sure you want to overwrite your current notes?</p>
                     <div class="custom-dialog-actions">
                         <button class="btn-secondary dialog-cancel">Cancel</button>
                         <button class="btn-primary dialog-submit" style="background: #2563eb;">Overwrite</button>
