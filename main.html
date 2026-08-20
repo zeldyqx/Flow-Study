@@ -332,6 +332,95 @@
             background-color: #ffffff;
         }
 
+        /* Toast Notifications Container (Bottom-Right) */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .toast {
+            width: 320px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            pointer-events: auto;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast-content {
+            padding: 14px 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .toast-icon {
+            width: 20px;
+            height: 20px;
+            min-width: 20px;
+            margin-top: 1px;
+        }
+
+        .toast.success .toast-icon { color: #10b981; }
+        .toast.error .toast-icon { color: #ef4444; }
+        .toast.info .toast-icon { color: #3b82f6; }
+
+        .toast-text-wrap {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .toast-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .toast-message {
+            font-size: 0.8rem;
+            color: #64748b;
+            line-height: 1.4;
+        }
+
+        .toast-progress-bar {
+            height: 3px;
+            width: 100%;
+            background: #f1f5f9;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .toast-progress-fill {
+            height: 100%;
+            width: 100%;
+            background: #0f172a;
+            transform-origin: left;
+            transition: transform linear;
+        }
+
+        .toast.success .toast-progress-fill { background: #10b981; }
+        .toast.error .toast-progress-fill { background: #ef4444; }
+        .toast.info .toast-progress-fill { background: #3b82f6; }
+
         /* Modal Overlay */
         .modal-overlay {
             position: fixed;
@@ -822,12 +911,59 @@
 
     <!-- Custom Dialog Modal (For Email, Password, 2FA) -->
     <div class="custom-dialog-overlay" id="custom-dialog-overlay">
-        <div class="custom-dialog" id="custom-dialog-box">
-            <!-- Dynamically injected content -->
-        </div>
+        <div class="custom-dialog" id="custom-dialog-box"></div>
     </div>
 
+    <!-- Toast Notifications Container -->
+    <div class="toast-container" id="toast-container"></div>
+
 <script>
+    // Toast Notification System
+    function showToast(title, message, type = 'success', duration = 4000) {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+
+        let iconSvg = '';
+        if (type === 'success') {
+            iconSvg = '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
+        } else if (type === 'error') {
+            iconSvg = '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>';
+        } else {
+            iconSvg = '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
+        }
+
+        toast.innerHTML = `
+            <div class="toast-content">
+                ${iconSvg}
+                <div class="toast-text-wrap">
+                    <span class="toast-title">${title}</span>
+                    <span class="toast-message">${message}</span>
+                </div>
+            </div>
+            <div class="toast-progress-bar">
+                <div class="toast-progress-fill" style="transition-duration: ${duration}ms;"></div>
+            </div>
+        `;
+
+        container.appendChild(toast);
+
+        // Trigger show animation
+        setTimeout(() => {
+            toast.classList.add('show');
+            const fill = toast.querySelector('.toast-progress-fill');
+            if (fill) fill.style.transform = 'scaleX(0)';
+        }, 20);
+
+        // Remove after duration
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, duration);
+    }
+
     const usernameInput = document.getElementById('username-input');
     const userIdInput = document.getElementById('user-id-input');
     const emailMaskedDesc = document.getElementById('email-masked-desc');
@@ -979,7 +1115,7 @@
             `, () => {
                 const val = document.getElementById('dialog-new-email').value.trim();
                 if (!val || !val.includes('@')) {
-                    alert('Please enter a valid email address.');
+                    showToast('Invalid Email', 'Please enter a valid email address.', 'error');
                     return false;
                 }
                 if (session) {
@@ -991,6 +1127,7 @@
                     localStorage.setItem('flowstudy_session', JSON.stringify(session));
                     saveUsersDB(users);
                     applyUserData(session.username, session.id, session.email, session.is2fa);
+                    showToast('Success', 'Email address successfully updated.', 'success');
                 }
             });
         });
@@ -1017,23 +1154,22 @@
                 const oldP = document.getElementById('dialog-old-pass').value;
                 const newP = document.getElementById('dialog-new-pass').value;
                 if (!oldP || !newP) {
-                    alert('Please fill in all fields.');
+                    showToast('Error', 'Please fill in all fields.', 'error');
                     return false;
                 }
                 if (newP.length < 4) {
-                    alert('Password must be at least 4 characters long.');
+                    showToast('Error', 'Password must be at least 4 characters long.', 'error');
                     return false;
                 }
-                alert('Password successfully updated!');
+                showToast('Success', 'Password successfully updated!', 'success');
             });
 
-            // Handle Forgot Password link inside the dialog
             setTimeout(() => {
                 const forgotLink = document.getElementById('dialog-forgot-link');
                 if (forgotLink) {
                     forgotLink.onclick = (e) => {
                         e.preventDefault();
-                        alert(`Password reset instructions have been sent to your email (${session && session.email ? maskEmail(session.email) : 'registered email'}).`);
+                        showToast('Reset Instructions', `Sent to your email (${session && session.email ? maskEmail(session.email) : 'registered email'}).`, 'info', 5000);
                     };
                 }
             }, 50);
@@ -1046,7 +1182,6 @@
             const isCurrentlyEnabled = session && session.is2fa;
 
             if (isCurrentlyEnabled) {
-                // Direct disable confirmation
                 showCustomDialog(`
                     <h3>Disable 2FA</h3>
                     <p>Enter your password to disable Two-Factor Authentication.</p>
@@ -1058,14 +1193,13 @@
                 `, () => {
                     const pass = document.getElementById('dialog-2fa-pass').value;
                     if (!pass) {
-                        alert('Password is required.');
+                        showToast('Error', 'Password is required.', 'error');
                         return false;
                     }
                     session.is2fa = false;
                     updateSession2FA(false);
                 });
             } else {
-                // Enable 2FA flow: Step 1 -> Enter Password
                 showCustomDialog(`
                     <h3>Enable 2FA (Step 1 of 2)</h3>
                     <p>Confirm your password to initiate 2FA setup.</p>
@@ -1077,11 +1211,10 @@
                 `, () => {
                     const pass = document.getElementById('dialog-2fa-pass').value;
                     if (!pass) {
-                        alert('Password is required.');
+                        showToast('Error', 'Password is required.', 'error');
                         return false;
                     }
 
-                    // Step 2 -> Enter Code sent to email
                     setTimeout(() => {
                         showCustomDialog(`
                             <h3>Verify Email Code (Step 2 of 2)</h3>
@@ -1094,7 +1227,7 @@
                         `, () => {
                             const code = document.getElementById('dialog-2fa-code').value.trim();
                             if (!code) {
-                                alert('Please enter the code.');
+                                showToast('Error', 'Please enter the verification code.', 'error');
                                 return false;
                             }
                             session.is2fa = true;
@@ -1116,7 +1249,7 @@
             localStorage.setItem('flowstudy_session', JSON.stringify(session));
             saveUsersDB(users);
             applyUserData(session.username, session.id, session.email, session.is2fa);
-            alert(status ? 'Two-Factor Authentication successfully enabled!' : 'Two-Factor Authentication disabled.');
+            showToast('2FA Status', status ? 'Two-Factor Authentication successfully enabled!' : 'Two-Factor Authentication disabled.', status ? 'success' : 'info');
         }
     }
 
@@ -1156,27 +1289,34 @@
                 const idToDelete = cleanId(e.target.getAttribute('data-id'));
                 
                 if (idToDelete.toLowerCase() === 'z') {
-                    alert('User with ID "z" cannot be deleted.');
+                    showToast('Action Denied', 'User with ID "z" cannot be deleted.', 'error');
                     return;
                 }
 
-                if (confirm(`Are you sure you want to delete user #${idToDelete}?`)) {
-                    let usersBefore = getUsersDB();
-                    let updatedUsers = usersBefore.filter(u => cleanId(u.id).toLowerCase() !== idToDelete.toLowerCase());
-                    
-                    saveUsersDB(updatedUsers);
-                    renderAdminUsersList();
-                }
+                // Custom confirmation or quick removal with toast
+                let usersBefore = getUsersDB();
+                let updatedUsers = usersBefore.filter(u => cleanId(u.id).toLowerCase() !== idToDelete.toLowerCase());
+                
+                saveUsersDB(updatedUsers);
+                renderAdminUsersList();
+                showToast('User Deleted', `User #${idToDelete} was removed.`, 'info');
             });
         });
     }
 
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
-            if (confirm('Are you sure you want to log out?')) {
+            showCustomDialog(`
+                <h3>Log Out</h3>
+                <p>Are you sure you want to end your session?</p>
+                <div class="custom-dialog-actions">
+                    <button class="btn-secondary dialog-cancel">Cancel</button>
+                    <button class="btn-primary dialog-submit" style="background: #ef4444;">Log Out</button>
+                </div>
+            `, () => {
                 localStorage.removeItem('flowstudy_session');
                 window.location.href = 'auth.html';
-            }
+            });
         });
     }
 
