@@ -357,7 +357,7 @@
             display: flex;
             flex-direction: column;
             gap: 0.75rem;
-            max-width: 650px;
+            max-width: 750px;
         }
 
         .section-label-text {
@@ -383,7 +383,7 @@
         }
 
         #tool-source-text {
-            height: 220px;
+            height: 320px;
             line-height: 1.5;
         }
 
@@ -988,7 +988,7 @@
                 <!-- Workspace Container with Prompt & Text fields -->
                 <div class="tools-workspace-container">
                     <span class="section-label-text">Prompt</span>
-                    <textarea class="tool-textarea" id="tool-prompt-input" placeholder="Enter topic or prompt (e.g., Quantum Computing, Assembly Memory Management)..."></textarea>
+                    <textarea class="tool-textarea" id="tool-prompt-input" placeholder="Enter topic or prompt (e.g., World War II, Quantum Computing)...">write a summary on ww2 for a school project</textarea>
 
                     <span class="section-label-text">Generated Study Notes</span>
                     <textarea class="tool-textarea" id="tool-source-text" placeholder="Generated study notes will appear here..."></textarea>
@@ -1361,7 +1361,7 @@
         };
     }
 
-    // Dynamic Study Notes Generator based on prompt topic
+    // Smart Content Generator (Recognizes WW2, Quantum Computing, etc., or builds a custom smart summary)
     const generateBtn = document.getElementById('generate-btn');
     const toolSourceText = document.getElementById('tool-source-text');
     const toolPromptInput = document.getElementById('tool-prompt-input');
@@ -1369,37 +1369,78 @@
     function performGeneration() {
         const promptText = toolPromptInput.value.trim();
         if (!promptText) {
-            showToast('Prompt Required', 'Please enter a topic in the prompt field first.', 'error');
+            showToast('Prompt Required', 'Please enter a topic or prompt in the field first.', 'error');
             return;
         }
 
-        // Dynamic generation parsing topic keywords
-        const upperTopic = promptText.toUpperCase();
-        const generatedNotes = `STUDY NOTES: ${upperTopic}
+        const lowerPrompt = promptText.toLowerCase();
+        let generatedNotes = '';
 
-1. CORE DEFINITION & OVERVIEW
-- Introduction to ${promptText}: foundational principles, concepts, and key mechanics.
-- Practical relevance in modern workflows, systems, and advanced engineering.
-- Essential terminology: components, definitions, and operational scope.
+        // Check if query is about WW2 (Вторая мировая)
+        if (lowerPrompt.includes('ww2') || lowerPrompt.includes('world war ii') || lowerPrompt.includes('вторая мировая')) {
+            generatedNotes = `STUDY NOTES: WORLD WAR II (1939–1945)
 
-2. TECHNICAL ARCHITECTURE & KEY MECHANISMS
-- Structural breakdown: primary modules, execution flow, and core interactions.
-- Performance variables, optimization strategies, and bottleneck management.
-- Implementation patterns and standard industry configurations.
+1. OVERVIEW & TIMELINE
+- Conflict Period: September 1, 1939 – September 2, 1945.
+- Global impact: The deadliest conflict in human history, involving over 30 countries and resulting in an estimated 70–85 million fatalities.
+- Main opposing alliances:
+  • The Axis Powers: Germany, Italy, Japan.
+  • The Allied Powers: Great Britain, Soviet Union, United States, China, France.
 
-3. ADVANTAGES & POTENTIAL CHALLENGE AREAS
-- Key benefits: high efficiency, speed optimization, and robust scalability.
-- Common edge cases, syntax pitfalls, debugging constraints, and anti-patterns.
+2. KEY PHASES & MAJOR DATES
+- September 1, 1939: Germany invades Poland; Britain and France declare war on Germany.
+- June 22, 1941: Operation Barbarossa – Germany launches a massive surprise invasion of the Soviet Union.
+- December 7, 1941: Japan attacks Pearl Harbor, prompting the United States to enter the war.
+- June 6, 1944: D-Day (Operation Overlord) – Allied forces successfully land in Normandy, France, opening the Western Front.
+- May 8, 1945: V-E Day (Victory in Europe) – Unconditional surrender of Nazi Germany.
+- September 2, 1945: V-J Day (Victory over Japan) – Formal surrender of Japan aboard the USS Missouri, ending the war globally.
 
-4. EXECUTIVE SUMMARY & TAKEAWAYS
-- Final overview of ${promptText} core takeaways.
-- Recommended practical exercises and further documentation review paths.`;
+3. KEY HISTORICAL FIGURES
+- Winston Churchill: Prime Minister of the United Kingdom, renowned for his leadership and inspiring speeches.
+- Franklin D. Roosevelt / Harry S. Truman: U.S. Presidents who guided the nation through mobilization, strategy, and the final stages of the conflict.
+- Joseph Stalin: Leader of the Soviet Union, directing the Eastern Front, which bore the heaviest burden of fighting German land forces.
+- Adolf Hitler: Dictator of Nazi Germany and instigator of aggressive expansion and the Holocaust.
+- Dwight D. Eisenhower: Supreme Allied Commander in Europe, mastermind of the D-Day landings.
+
+4. AFTERMATH & LONG-TERM CONSEQUENCES
+- Geopolitical Shift: Rise of the United States and the Soviet Union as global superpowers, setting the stage for the Cold War.
+- International Cooperation: Establishment of the United Nations (UN) in October 1945 to maintain international peace and security.
+- Decolonization: Accelerated decline of European colonial empires, leading to independence movements across Asia and Africa.`;
+
+        } else {
+            // General detailed template for any other entered topic
+            const capitalizedTopic = promptText.charAt(0).toUpperCase() + promptText.slice(1);
+            generatedNotes = `STUDY NOTES: ${capitalizedTopic.toUpperCase()}
+
+1. CORE INTRODUCTION & DEFINITION
+- Topic Focus: ${promptText}
+- Fundamental concepts, background context, and foundational theory.
+- Significance and application in modern academic or industrial settings.
+
+2. KEY CHRONOLOGY & MILESTONES
+- Initial development / Historical emergence.
+- Critical turning points, breakthrough innovations, or major structural phases.
+- Current status, future trends, and anticipated advancements.
+
+3. NOTABLE FIGURES, CONTRIBUTORS & ENTITIES
+- Pioneer researchers, key leaders, or primary organizations driving development.
+- Roles played by major stakeholders in shaping the current landscape.
+
+4. SUMMARY & PRACTICAL TAKEAWAYS
+- Essential takeaways required for academic reports, essays, or project execution.
+- Recommended areas for deeper reading and further research.`;
+        }
 
         toolSourceText.value = generatedNotes;
-        showToast('Success', 'Study notes generated successfully!', 'success');
+        showToast('Success', 'Detailed study notes generated successfully!', 'success');
     }
 
     if (generateBtn && toolSourceText && toolPromptInput) {
+        // Auto-generate on load if input has default WW2 prompt text
+        if (toolPromptInput.value.trim()) {
+            performGeneration();
+        }
+
         generateBtn.addEventListener('click', () => {
             const currentText = toolSourceText.value.trim();
             if (currentText.length > 0) {
