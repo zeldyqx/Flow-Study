@@ -606,74 +606,318 @@
         </div>
     </div>
 
-    <script>
-        // Sidebar Toggle
-        const sidebar = document.getElementById('sidebar');
-        const toggleBtn = document.getElementById('toggle-btn');
-        const toggleIcon = document.getElementById('toggle-icon');
+<script>
+    let currentMode = 'signup';
 
-        toggleBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed');
-            if (sidebar.classList.contains('collapsed')) {
-                toggleIcon.innerHTML = '<polyline points="9 18 15 12 9 6"></polyline>';
+    // Инициализация базы данных пользователей в localStorage
+    function getUsersDB() {
+        const users = localStorage.getItem('flowstudy_users');
+        return users ? JSON.parse(users) : [
+            { username: 'admin', email: 'admin@mail.com', password: 'password123' },
+            { username: 'alex', email: 'alex@mail.com', password: 'password123' },
+            { username: 'kywy', email: 'kywy@mail.com', password: 'password123' }
+        ];
+    }
+
+    function saveUserToDB(newUser) {
+        const users = getUsersDB();
+        users.push(newUser);
+        localStorage.setItem('flowstudy_users', JSON.stringify(users));
+    }
+
+    function setSession(user) {
+        localStorage.setItem('flowstudy_session', JSON.stringify({
+            username: user.username || user.name || 'User',
+            email: user.email,
+            isLoggedIn: true
+        }));
+        window.location.href = 'main.html';
+    }
+
+    // Парсинг JWT от Google
+    function decodeJwtResponse(token) {
+        let base64Url = token.split('.')[1];
+        let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        let jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+    }
+
+    // Callback при успешной Google-авторизации
+    window.handleGoogleResponse = function(response) {
+        const responsePayload = decodeJwtResponse(response.credential);
+        setSession({
+            username: responsePayload.name,
+            email: responsePayload.email
+        });
+    };
+
+    const form = document.getElementById('auth-form');
+    const title = document.getElementById('form-title');
+    const prompt = document.getElementById('form-prompt');
+    const toggleBtn = document.getElementById('toggle-btn');
+    const backBtn = document.getElementById('back-btn');
+    const googleBtnContainer = document.getElementById('google-btn-container');
+    const divider = document.getElementById('divider');
+
+    const usernameGroup = document.getElementById('username-group');
+    const passwordGroup = document.getElementById('password-group');
+
+    const submitBtn = document.getElementById('submit-btn');
+    const usernameInput = document.getElementById('username');
+    const loginInput = document.getElementById('login-identifier');
+    const passwordInput = document.getElementById('password');
+    const usernameStatus = document.getElementById('username-status');
+    const loginStatus = document.getElementById('login-status');
+    const passwordStatus = document.getElementById('password-status');
+
+    const togglePasswordBtn = document.getElementById('toggle-password-btn');
+    const eyeIcon = document.getElementById('eye-icon');
+    const loginOptions = document.getElementById('login-options');
+    const rememberMeLabel = document.getElementById('remember-me-label');
+    const forgotPasswordLink = document.getElementById('forgot-password-link');
+    const termsText = document.getElementById('terms-text');
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const usernameRegex = /^[a-zA-Z0-9_-]+$/;
+
+    // --- Логика диначеского переключения раскладки/типа для loginInput ---
+    function handleInputModeDetection() {
+        const val = loginInput.value.trim();
+
+        // Если введен символ @ или значение совпадает с шаблоном email, переключаем на раскладку email
+        if (val.includes('@') || emailRegex.test(val)) {
+            loginInput.setAttribute('inputmode', 'email');
+            loginInput.type = 'email';
+        } else {
+            loginInput.setAttribute('inputmode', 'text');
+            loginInput.type = 'text';
+        }
+    }
+
+    loginInput.addEventListener('input', () => {
+        handleInputModeDetection();
+        if (loginStatus.classList.contains('invalid')) {
+            loginStatus.textContent = '';
+        }
+    });
+
+    // При получении фокуса в режиме Sign Up или Forgot добавляем '@', если поле пустое
+    loginInput.addEventListener('focus', () => {
+        if ((currentMode === 'signup' || currentMode === 'forgot') && !loginInput.value) {
+            loginInput.value = '@';
+            // Выставляем курсор в начало перед '@' для удобного ввода имени ящика
+            setTimeout(() => {
+                loginInput.setSelectionRange(0, 0);
+            }, 0);
+            handleInputModeDetection();
+        }
+    });
+
+    // Переключение видимости пароля
+    togglePasswordBtn.addEventListener('click', () => {
+        const isPassword = passwordInput.type === 'password';
+        passwordInput.type = isPassword ? 'text' : 'password';
+        
+        eyeIcon.innerHTML = isPassword 
+            ? `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>`
+            : `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>`;
+    });
+
+    function updateFormUI(mode) {
+        currentMode = mode;
+        loginStatus.textContent = '';
+        usernameStatus.textContent = '';
+        passwordStatus.textContent = '';
+
+        if (mode === 'signup') {
+            backBtn.style.display = 'none';
+            title.textContent = 'Sign Up';
+            prompt.style.display = 'block';
+            prompt.childNodes[0].textContent = 'Already have an account? ';
+            toggleBtn.textContent = 'Log in';
+            googleBtnContainer.style.display = 'flex';
+            divider.style.display = 'flex';
+            
+            usernameGroup.classList.remove('collapsed');
+            passwordGroup.classList.remove('collapsed');
+            
+            loginInput.placeholder = 'Email address';
+            loginInput.setAttribute('inputmode', 'email');
+            loginInput.type = 'email';
+            loginOptions.style.display = 'none';
+            
+            termsText.style.display = 'block';
+            submitBtn.textContent = 'Create Account';
+        } else if (mode === 'login') {
+            backBtn.style.display = 'none';
+            title.textContent = 'Log In';
+            prompt.style.display = 'block';
+            prompt.childNodes[0].textContent = "Don't have an account? ";
+            toggleBtn.textContent = 'Sign up';
+            googleBtnContainer.style.display = 'flex';
+            divider.style.display = 'flex';
+
+            usernameGroup.classList.add('collapsed');
+            passwordGroup.classList.remove('collapsed');
+
+            loginInput.placeholder = 'Username or Email';
+            loginInput.setAttribute('inputmode', 'text');
+            loginInput.type = 'text';
+            loginOptions.style.display = 'flex';
+            rememberMeLabel.style.display = 'flex';
+            forgotPasswordLink.style.display = 'inline';
+
+            termsText.style.display = 'none';
+            submitBtn.textContent = 'Log In';
+        } else if (mode === 'forgot') {
+            backBtn.style.display = 'inline-flex';
+            title.textContent = 'Reset Password';
+            prompt.style.display = 'none';
+            googleBtnContainer.style.display = 'none';
+            divider.style.display = 'none';
+
+            usernameGroup.classList.add('collapsed');
+            passwordGroup.classList.add('collapsed');
+
+            loginInput.placeholder = 'Enter your email address';
+            loginInput.setAttribute('inputmode', 'email');
+            loginInput.type = 'email';
+            loginOptions.style.display = 'none';
+            termsText.style.display = 'none';
+            submitBtn.textContent = 'Send Reset Link';
+        }
+    }
+
+    toggleBtn.addEventListener('click', () => {
+        updateFormUI(currentMode === 'signup' ? 'login' : 'signup');
+    });
+
+    backBtn.addEventListener('click', () => {
+        updateFormUI('login');
+    });
+
+    forgotPasswordLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        updateFormUI('forgot');
+    });
+
+    function validateIdentifier() {
+        const val = loginInput.value.trim();
+        const users = getUsersDB();
+
+        if (!val || val === '@') {
+            loginStatus.textContent = '';
+            return false;
+        }
+
+        if (currentMode === 'signup' || currentMode === 'forgot') {
+            if (!emailRegex.test(val)) {
+                loginStatus.textContent = 'Please enter a valid email address';
+                loginStatus.className = 'status-msg invalid';
+                return false;
+            }
+            if (currentMode === 'signup') {
+                if (users.some(u => u.email.toLowerCase() === val.toLowerCase())) {
+                    loginStatus.textContent = 'Email is already registered';
+                    loginStatus.className = 'status-msg taken';
+                    return false;
+                }
+                loginStatus.textContent = 'Email is available';
+                loginStatus.className = 'status-msg available';
             } else {
-                toggleIcon.innerHTML = '<polyline points="15 18 9 12 15 6"></polyline>';
+                loginStatus.textContent = '';
             }
-        });
+            return true;
+        } else {
+            loginStatus.textContent = '';
+            return true;
+        }
+    }
 
-        // Settings Modal Controls
-        const modalOverlay = document.getElementById('settings-modal-overlay');
-        const openSettingsBtn = document.getElementById('open-settings-btn');
-        const profileSettingsBtn = document.getElementById('profile-settings-btn');
-        const closeModalBtn = document.getElementById('close-modal-btn');
+    function validateUsername() {
+        if (currentMode !== 'signup') return true;
+        const val = usernameInput.value.trim();
+        const users = getUsersDB();
 
-        function openModal() {
-            modalOverlay.classList.add('active');
+        if (!val) {
+            usernameStatus.textContent = '';
+            return false;
         }
 
-        function closeModal() {
-            modalOverlay.classList.remove('active');
+        if (!usernameRegex.test(val)) {
+            usernameStatus.textContent = 'Only English letters, numbers, _ and - allowed';
+            usernameStatus.className = 'status-msg invalid';
+            return false;
         }
 
-        openSettingsBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            openModal();
-        });
+        if (users.some(u => u.username.toLowerCase() === val.toLowerCase())) {
+            usernameStatus.textContent = 'Username is already taken';
+            usernameStatus.className = 'status-msg invalid';
+            return false;
+        }
 
-        profileSettingsBtn.addEventListener('click', () => {
-            openModal();
-        });
+        usernameStatus.textContent = 'Username is available';
+        usernameStatus.className = 'status-msg available';
+        return true;
+    }
 
-        closeModalBtn.addEventListener('click', closeModal);
+    loginInput.addEventListener('blur', validateIdentifier);
+    usernameInput.addEventListener('input', validateUsername);
 
-        modalOverlay.addEventListener('click', (e) => {
-            if (e.target === modalOverlay) {
-                closeModal();
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const users = getUsersDB();
+
+        if (currentMode === 'forgot') {
+            if (!validateIdentifier()) return;
+            alert(`Password reset link has been sent to ${loginInput.value.trim()}`);
+            updateFormUI('login');
+            return;
+        }
+
+        const identifierVal = loginInput.value.trim();
+        const passwordVal = passwordInput.value;
+
+        if (currentMode === 'signup') {
+            const isLoginValid = validateIdentifier();
+            const isUsernameValid = validateUsername();
+
+            if (!isLoginValid || !isUsernameValid) return;
+            if (!passwordVal) {
+                passwordStatus.textContent = 'Password is required';
+                passwordStatus.className = 'status-msg invalid';
+                return;
             }
-        });
 
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
-                closeModal();
+            const newUser = {
+                username: usernameInput.value.trim(),
+                email: identifierVal,
+                password: passwordVal
+            };
+
+            saveUserToDB(newUser);
+            setSession(newUser);
+        } else {
+            if (!identifierVal || !passwordVal) {
+                passwordStatus.textContent = 'Please fill in all fields';
+                passwordStatus.className = 'status-msg invalid';
+                return;
             }
-        });
 
-        // Modal Tab Switching
-        const tabBtns = document.querySelectorAll('.modal-sidebar .tab-btn');
-        const tabPanels = document.querySelectorAll('.tab-panel');
+            const user = users.find(u => 
+                (u.email.toLowerCase() === identifierVal.toLowerCase() || 
+                 u.username.toLowerCase() === identifierVal.toLowerCase()) && 
+                u.password === passwordVal
+            );
 
-        tabBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const targetTab = btn.getAttribute('data-tab');
-
-                tabBtns.forEach(b => b.classList.remove('active'));
-                tabPanels.forEach(p => p.classList.remove('active'));
-
-                btn.classList.add('active');
-                document.getElementById(targetTab).classList.add('active');
-            });
-        });
-    </script>
-
-</body>
-</html>
+            if (user) {
+                setSession(user);
+            } else {
+                passwordStatus.textContent = 'Invalid username/email or password';
+                passwordStatus.className = 'status-msg invalid';
+            }
+        }
+    });
+</script>
