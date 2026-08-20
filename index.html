@@ -381,21 +381,21 @@
                 </p>
             </div>
 
-   <div class="google-btn-container" id="google-btn-container">
-    <div id="g_id_onload"
-         data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
-         data-callback="handleGoogleResponse">
-    </div>
-    <div class="g_id_signin" 
-         data-type="standard" 
-         data-shape="rectangular" 
-         data-theme="outline" 
-         data-text="continue_with" 
-         data-size="large" 
-         data-logo_alignment="left"
-         data-width="240">
-    </div>
-</div>
+            <div class="google-btn-container" id="google-btn-container">
+                <div id="g_id_onload"
+                     data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+                     data-callback="handleGoogleResponse">
+                </div>
+                <div class="g_id_signin" 
+                     data-type="standard" 
+                     data-shape="rectangular" 
+                     data-theme="outline" 
+                     data-text="continue_with" 
+                     data-size="large" 
+                     data-logo_alignment="left"
+                     data-width="240">
+                </div>
+            </div>
 
             <div class="divider" id="divider">
                 <span>OR</span>
@@ -445,7 +445,6 @@
     <script>
         let currentMode = 'signup';
 
-        // Инициализация базы данных пользователей в localStorage
         function getUsersDB() {
             const users = localStorage.getItem('flowstudy_users');
             return users ? JSON.parse(users) : [
@@ -462,15 +461,21 @@
         }
 
         function setSession(user) {
+            const usernameToSave = user.username || user.name || 'User';
+            
+            // Записываем сессию
             localStorage.setItem('flowstudy_session', JSON.stringify({
-                username: user.username || user.name || 'User',
+                username: usernameToSave,
                 email: user.email,
                 isLoggedIn: true
             }));
+
+            // Перезаписываем пользовательское имя в локальном хранилище, чтобы синхронизировать данные
+            localStorage.setItem('flowstudy_username', usernameToSave);
+
             window.location.href = 'main.html';
         }
 
-        // Парсинг JWT от Google
         function decodeJwtResponse(token) {
             let base64Url = token.split('.')[1];
             let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -480,7 +485,6 @@
             return JSON.parse(jsonPayload);
         }
 
-        // Callback при успешной Google-авторизации
         window.handleGoogleResponse = function(response) {
             const responsePayload = decodeJwtResponse(response.credential);
             setSession({
