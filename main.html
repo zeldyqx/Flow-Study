@@ -566,6 +566,72 @@
         .btn-secondary:hover {
             background: #e2e8f0;
         }
+
+        /* Custom Inner Modal Overlay */
+        .custom-dialog-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(1px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+        }
+
+        .custom-dialog-overlay.active {
+            display: flex;
+        }
+
+        .custom-dialog {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            width: 360px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .custom-dialog h3 {
+            font-size: 1.05rem;
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+        .custom-dialog p {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: -0.5rem;
+        }
+
+        .custom-dialog-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #0f172a;
+            color: #ffffff;
+            border: none;
+            padding: 0.45rem 0.85rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background: #1e293b;
+        }
     </style>
 </head>
 <body>
@@ -703,16 +769,19 @@
                         <label class="setting-label">Username</label>
                         <input type="text" class="setting-input" id="username-input" placeholder="Enter username">
                     </div>
-                    <div class="setting-group">
-                        <label class="setting-label">Email Address</label>
-                        <input type="email" class="setting-input" id="email-input" placeholder="Enter new email">
+                    <div class="action-row">
+                        <div class="action-info">
+                            <span class="action-title">Email Address</span>
+                            <span class="action-desc" id="email-masked-desc">Not set</span>
+                        </div>
+                        <button class="btn-secondary" id="open-change-email-btn">Change Email</button>
                     </div>
                     <div class="action-row">
                         <div class="action-info">
                             <span class="action-title">Password</span>
                             <span class="action-desc">Change your account password</span>
                         </div>
-                        <button class="btn-secondary" id="change-password-btn">Change Password</button>
+                        <button class="btn-secondary" id="open-change-password-btn">Change Password</button>
                     </div>
                     <div class="action-row">
                         <div class="action-info">
@@ -751,10 +820,17 @@
         </div>
     </div>
 
+    <!-- Custom Dialog Modal (For Email, Password, 2FA) -->
+    <div class="custom-dialog-overlay" id="custom-dialog-overlay">
+        <div class="custom-dialog" id="custom-dialog-box">
+            <!-- Dynamically injected content -->
+        </div>
+    </div>
+
 <script>
     const usernameInput = document.getElementById('username-input');
     const userIdInput = document.getElementById('user-id-input');
-    const emailInput = document.getElementById('email-input');
+    const emailMaskedDesc = document.getElementById('email-masked-desc');
     const displayUsername = document.getElementById('display-username');
     const displayRole = document.getElementById('display-role');
     const avatarInitial = document.getElementById('avatar-initial');
@@ -762,9 +838,13 @@
     const adminUsersList = document.getElementById('admin-users-list');
     const logoutBtn = document.getElementById('logout-btn');
     
-    const changePasswordBtn = document.getElementById('change-password-btn');
+    const openChangeEmailBtn = document.getElementById('open-change-email-btn');
+    const openChangePasswordBtn = document.getElementById('open-change-password-btn');
     const toggle2faBtn = document.getElementById('toggle-2fa-btn');
     const faStatusDesc = document.getElementById('fa-status-desc');
+
+    const customDialogOverlay = document.getElementById('custom-dialog-overlay');
+    const customDialogBox = document.getElementById('custom-dialog-box');
 
     // Notifications Dropdown Toggle
     const notificationsBtn = document.getElementById('notifications-btn');
@@ -795,6 +875,18 @@
         localStorage.setItem('flowstudy_users', JSON.stringify(users));
     }
 
+    function maskEmail(email) {
+        if (!email) return 'No email assigned';
+        const parts = email.split('@');
+        if (parts.length !== 2) return email;
+        const name = parts[0];
+        const domain = parts[1];
+        if (name.length <= 2) {
+            return `${name[0]}***@${domain}`;
+        }
+        return `${name[0]}***${name.slice(-1)}@${domain}`;
+    }
+
     function applyUserData(name, id, email, is2fa) {
         const cleanName = name ? name.trim() : 'User';
         const rawId = cleanId(id) || '1';
@@ -803,7 +895,7 @@
         if (avatarInitial) avatarInitial.textContent = cleanName.charAt(0).toUpperCase();
         if (usernameInput) usernameInput.value = cleanName;
         if (userIdInput) userIdInput.value = `#${rawId}`;
-        if (emailInput && email) emailInput.value = email;
+        if (emailMaskedDesc) emailMaskedDesc.textContent = maskEmail(email);
 
         if (toggle2faBtn && faStatusDesc) {
             if (is2fa) {
@@ -852,52 +944,180 @@
         });
     }
 
-    if (emailInput) {
-        emailInput.addEventListener('input', (e) => {
-            const newEmail = e.target.value.trim();
-            if (session) {
-                const users = getUsersDB();
-                const userIdx = users.findIndex(u => cleanId(u.id) === cleanId(session.id));
-                session.email = newEmail;
-                if (userIdx !== -1) users[userIdx].email = newEmail;
+    // Custom Dialog Helper
+    function showCustomDialog(htmlContent, onSubmit) {
+        customDialogBox.innerHTML = htmlContent;
+        customDialogOverlay.classList.add('active');
 
-                localStorage.setItem('flowstudy_session', JSON.stringify(session));
-                saveUsersDB(users);
+        const cancelBtn = customDialogBox.querySelector('.dialog-cancel');
+        const submitBtn = customDialogBox.querySelector('.dialog-submit');
+
+        const close = () => {
+            customDialogOverlay.classList.remove('active');
+            customDialogBox.innerHTML = '';
+        };
+
+        if (cancelBtn) cancelBtn.onclick = close;
+        if (submitBtn) submitBtn.onclick = () => {
+            if (onSubmit() !== false) {
+                close();
             }
-        });
+        };
     }
 
-    if (changePasswordBtn) {
-        changePasswordBtn.addEventListener('click', () => {
-            const oldPass = prompt('Enter current password:');
-            if (oldPass !== null) {
-                const newPass = prompt('Enter new password:');
-                if (newPass && newPass.length >= 4) {
-                    alert('Password successfully updated!');
-                } else if (newPass !== null) {
-                    alert('Password must be at least 4 characters long.');
+    // 1. Change Email Dialog
+    if (openChangeEmailBtn) {
+        openChangeEmailBtn.addEventListener('click', () => {
+            showCustomDialog(`
+                <h3>Change Email Address</h3>
+                <p>Enter your new email address below.</p>
+                <input type="email" class="setting-input" id="dialog-new-email" placeholder="newemail@example.com" value="${session && session.email ? session.email : ''}">
+                <div class="custom-dialog-actions">
+                    <button class="btn-secondary dialog-cancel">Cancel</button>
+                    <button class="btn-primary dialog-submit">Save Email</button>
+                </div>
+            `, () => {
+                const val = document.getElementById('dialog-new-email').value.trim();
+                if (!val || !val.includes('@')) {
+                    alert('Please enter a valid email address.');
+                    return false;
                 }
-            }
+                if (session) {
+                    session.email = val;
+                    const users = getUsersDB();
+                    const userIdx = users.findIndex(u => cleanId(u.id) === cleanId(session.id));
+                    if (userIdx !== -1) users[userIdx].email = val;
+
+                    localStorage.setItem('flowstudy_session', JSON.stringify(session));
+                    saveUsersDB(users);
+                    applyUserData(session.username, session.id, session.email, session.is2fa);
+                }
+            });
         });
     }
 
+    // 2. Change Password Dialog with Forgot Password
+    if (openChangePasswordBtn) {
+        openChangePasswordBtn.addEventListener('click', () => {
+            showCustomDialog(`
+                <h3>Change Password</h3>
+                <p>Provide your old password and a secure new one.</p>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <input type="password" class="setting-input" id="dialog-old-pass" placeholder="Current password">
+                    <input type="password" class="setting-input" id="dialog-new-pass" placeholder="New password (min 4 chars)">
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+                    <a href="#" id="dialog-forgot-link" style="font-size: 0.75rem; color: #2563eb; text-decoration: none;">Forgot Password?</a>
+                </div>
+                <div class="custom-dialog-actions">
+                    <button class="btn-secondary dialog-cancel">Cancel</button>
+                    <button class="btn-primary dialog-submit">Update Password</button>
+                </div>
+            `, () => {
+                const oldP = document.getElementById('dialog-old-pass').value;
+                const newP = document.getElementById('dialog-new-pass').value;
+                if (!oldP || !newP) {
+                    alert('Please fill in all fields.');
+                    return false;
+                }
+                if (newP.length < 4) {
+                    alert('Password must be at least 4 characters long.');
+                    return false;
+                }
+                alert('Password successfully updated!');
+            });
+
+            // Handle Forgot Password link inside the dialog
+            setTimeout(() => {
+                const forgotLink = document.getElementById('dialog-forgot-link');
+                if (forgotLink) {
+                    forgotLink.onclick = (e) => {
+                        e.preventDefault();
+                        alert(`Password reset instructions have been sent to your email (${session && session.email ? maskEmail(session.email) : 'registered email'}).`);
+                    };
+                }
+            }, 50);
+        });
+    }
+
+    // 3. 2FA Toggle Dialog (Password first, then code)
     if (toggle2faBtn) {
         toggle2faBtn.addEventListener('click', () => {
-            if (session) {
-                session.is2fa = !session.is2fa;
-                const users = getUsersDB();
-                const userIdx = users.findIndex(u => cleanId(u.id) === cleanId(session.id));
-                if (userIdx !== -1) users[userIdx].is2fa = session.is2fa;
+            const isCurrentlyEnabled = session && session.is2fa;
 
-                localStorage.setItem('flowstudy_session', JSON.stringify(session));
-                saveUsersDB(users);
-
-                applyUserData(session.username, session.id, session.email, session.is2fa);
-                alert(session.is2fa ? 'Two-Factor Authentication enabled.' : 'Two-Factor Authentication disabled.');
+            if (isCurrentlyEnabled) {
+                // Direct disable confirmation
+                showCustomDialog(`
+                    <h3>Disable 2FA</h3>
+                    <p>Enter your password to disable Two-Factor Authentication.</p>
+                    <input type="password" class="setting-input" id="dialog-2fa-pass" placeholder="Account password">
+                    <div class="custom-dialog-actions">
+                        <button class="btn-secondary dialog-cancel">Cancel</button>
+                        <button class="btn-primary dialog-submit">Disable</button>
+                    </div>
+                `, () => {
+                    const pass = document.getElementById('dialog-2fa-pass').value;
+                    if (!pass) {
+                        alert('Password is required.');
+                        return false;
+                    }
+                    session.is2fa = false;
+                    updateSession2FA(false);
+                });
             } else {
-                alert('Please log in properly to change 2FA settings.');
+                // Enable 2FA flow: Step 1 -> Enter Password
+                showCustomDialog(`
+                    <h3>Enable 2FA (Step 1 of 2)</h3>
+                    <p>Confirm your password to initiate 2FA setup.</p>
+                    <input type="password" class="setting-input" id="dialog-2fa-pass" placeholder="Account password">
+                    <div class="custom-dialog-actions">
+                        <button class="btn-secondary dialog-cancel">Cancel</button>
+                        <button class="btn-primary dialog-submit">Next</button>
+                    </div>
+                `, () => {
+                    const pass = document.getElementById('dialog-2fa-pass').value;
+                    if (!pass) {
+                        alert('Password is required.');
+                        return false;
+                    }
+
+                    // Step 2 -> Enter Code sent to email
+                    setTimeout(() => {
+                        showCustomDialog(`
+                            <h3>Verify Email Code (Step 2 of 2)</h3>
+                            <p>We sent a 6-digit code to <strong>${session && session.email ? maskEmail(session.email) : 'your email'}</strong>.</p>
+                            <input type="text" class="setting-input" id="dialog-2fa-code" placeholder="Enter code (e.g. 123456)" maxlength="6">
+                            <div class="custom-dialog-actions">
+                                <button class="btn-secondary dialog-cancel">Cancel</button>
+                                <button class="btn-primary dialog-submit">Verify & Enable</button>
+                            </div>
+                        `, () => {
+                            const code = document.getElementById('dialog-2fa-code').value.trim();
+                            if (!code) {
+                                alert('Please enter the code.');
+                                return false;
+                            }
+                            session.is2fa = true;
+                            updateSession2FA(true);
+                        });
+                    }, 100);
+                });
             }
         });
+    }
+
+    function updateSession2FA(status) {
+        if (session) {
+            session.is2fa = status;
+            const users = getUsersDB();
+            const userIdx = users.findIndex(u => cleanId(u.id) === cleanId(session.id));
+            if (userIdx !== -1) users[userIdx].is2fa = status;
+
+            localStorage.setItem('flowstudy_session', JSON.stringify(session));
+            saveUsersDB(users);
+            applyUserData(session.username, session.id, session.email, session.is2fa);
+            alert(status ? 'Two-Factor Authentication successfully enabled!' : 'Two-Factor Authentication disabled.');
+        }
     }
 
     function renderAdminUsersList() {
@@ -920,7 +1140,7 @@
                 <div>
                     <strong style="color: #0f172a;">${u.username}</strong> 
                     <span style="color: #64748b; font-size: 12px;">(#${userCleanId})</span>
-                    <div style="color: #64748b; font-size: 11px;">${u.email || 'No email'}</div>
+                    <div style="color: #64748b; font-size: 11px;">${u.email ? maskEmail(u.email) : 'No email'}</div>
                 </div>
                 ${isProtectedAdmin 
                     ? '<span style="color: #94a3b8; font-size: 12px; font-weight: 500;">Protected</span>' 
