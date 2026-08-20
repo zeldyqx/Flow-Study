@@ -731,6 +731,8 @@
             width: fit-content;
             margin: 1rem auto 0.5rem auto;
             border: 1px solid #e2e8f0;
+            align-items: center;
+            gap: 4px;
         }
 
         .billing-toggle .toggle-btn {
@@ -749,6 +751,19 @@
             background: #ffffff;
             color: #0f172a;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        /* Badge for yearly discount */
+        .discount-badge {
+            font-size: 0.7rem;
+            font-weight: 700;
+            background: #dcfce7;
+            color: #15803d;
+            padding: 2px 8px;
+            border-radius: 20px;
+            letter-spacing: -0.01em;
+            margin-left: 2px;
+            display: inline-block;
         }
 
         .subs-grid {
@@ -992,10 +1007,12 @@
                 </button>
             </div>
 
-            <!-- Billing Toggle -->
+            <!-- Billing Toggle with Save 18% badge -->
             <div class="billing-toggle">
                 <button class="toggle-btn active" data-period="monthly">Monthly</button>
-                <button class="toggle-btn" data-period="yearly">Yearly</button>
+                <button class="toggle-btn" data-period="yearly">
+                    Yearly <span class="discount-badge">Save 18%</span>
+                </button>
             </div>
 
             <div class="subs-grid">
@@ -1003,7 +1020,7 @@
                 <div class="sub-card">
                     <h4>Starter</h4>
                     <div class="sub-price">
-                        $<span class="amount" data-monthly="2.99" data-yearly="29.99">2.99</span>
+                        $<span class="amount" data-monthly="2.99" data-yearly="29.00">2.99</span>
                         <span style="font-size: 0.75rem; font-weight: 400; color: #64748b;" class="period">/ mo</span>
                     </div>
                     <div class="sub-desc">Basic core tools for standard organization and simple study tracking.</div>
@@ -1013,7 +1030,7 @@
                 <div class="sub-card">
                     <h4>Pro</h4>
                     <div class="sub-price">
-                        $<span class="amount" data-monthly="8.99" data-yearly="89.99">8.99</span>
+                        $<span class="amount" data-monthly="8.99" data-yearly="89.00">8.99</span>
                         <span style="font-size: 0.75rem; font-weight: 400; color: #64748b;" class="period">/ mo</span>
                     </div>
                     <div class="sub-desc">Essential features for regular users and enhanced productivity.</div>
@@ -1023,7 +1040,7 @@
                 <div class="sub-card popular">
                     <h4>Advanced</h4>
                     <div class="sub-price">
-                        $<span class="amount" data-monthly="19.99" data-yearly="199.99">19.99</span>
+                        $<span class="amount" data-monthly="19.99" data-yearly="199.00">19.99</span>
                         <span style="font-size: 0.75rem; font-weight: 400; color: #64748b;" class="period">/ mo</span>
                     </div>
                     <div class="sub-desc">Advanced tools, priority support, and maximum power.</div>
