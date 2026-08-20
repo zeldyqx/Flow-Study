@@ -602,99 +602,106 @@
         </div>
     </div>
 
-    <script>
-        // User Profile & Storage Logic
-        const usernameInput = document.getElementById('username-input');
-        const displayUsername = document.getElementById('display-username');
-        const avatarInitial = document.getElementById('avatar-initial');
+<script>
+    // User Profile & Storage Logic
+    const usernameInput = document.getElementById('username-input');
+    const displayUsername = document.getElementById('display-username');
+    const avatarInitial = document.getElementById('avatar-initial');
 
-        function updateUsernameUI(name) {
-            const cleanName = name.trim() || 'User';
-            displayUsername.textContent = cleanName;
-            avatarInitial.textContent = cleanName.charAt(0).toUpperCase();
-            usernameInput.value = cleanName;
-        }
+    function applyUsername(name) {
+        const cleanName = name.trim() || 'User';
+        displayUsername.textContent = cleanName;
+        avatarInitial.textContent = cleanName.charAt(0).toUpperCase();
+        usernameInput.value = cleanName;
+    }
 
-        const savedUser = localStorage.getItem('flowstudy_username');
-        if (savedUser) {
-            updateUsernameUI(savedUser);
+    // 1. Проверяем сохраненный ник в localStorage
+    const savedUser = localStorage.getItem('flowstudy_username');
+
+    if (savedUser !== null) {
+        // Если уже сохраняли — берем его
+        applyUsername(savedUser);
+    } else {
+        // Если запускаем впервые — берем то, что вписано прямо в HTML инпута!
+        const initialInputValue = usernameInput.value || usernameInput.getAttribute('value') || 'User';
+        applyUsername(initialInputValue);
+    }
+
+    // 2. Слушаем ввод и сохраняем на лету
+    usernameInput.addEventListener('input', (e) => {
+        const newName = e.target.value;
+        const cleanName = newName.trim() || 'User';
+        
+        displayUsername.textContent = cleanName;
+        avatarInitial.textContent = cleanName.charAt(0).toUpperCase();
+        
+        localStorage.setItem('flowstudy_username', newName);
+    });
+
+    // Sidebar Toggle
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('toggle-btn');
+    const toggleIcon = document.getElementById('toggle-icon');
+
+    toggleBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+        if (sidebar.classList.contains('collapsed')) {
+            toggleIcon.innerHTML = '<polyline points="9 18 15 12 9 6"></polyline>';
         } else {
-            updateUsernameUI('User');
+            toggleIcon.innerHTML = '<polyline points="15 18 9 12 15 6"></polyline>';
         }
+    });
 
-        usernameInput.addEventListener('input', (e) => {
-            const newName = e.target.value;
-            updateUsernameUI(newName);
-            localStorage.setItem('flowstudy_username', newName);
-        });
+    // Settings Modal Controls
+    const modalOverlay = document.getElementById('settings-modal-overlay');
+    const openSettingsBtn = document.getElementById('open-settings-btn');
+    const profileSettingsBtn = document.getElementById('profile-settings-btn');
+    const closeModalBtn = document.getElementById('close-modal-btn');
 
-        // Sidebar Toggle
-        const sidebar = document.getElementById('sidebar');
-        const toggleBtn = document.getElementById('toggle-btn');
-        const toggleIcon = document.getElementById('toggle-icon');
+    function openModal() {
+        modalOverlay.classList.add('active');
+    }
 
-        toggleBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed');
-            if (sidebar.classList.contains('collapsed')) {
-                toggleIcon.innerHTML = '<polyline points="9 18 15 12 9 6"></polyline>';
-            } else {
-                toggleIcon.innerHTML = '<polyline points="15 18 9 12 15 6"></polyline>';
-            }
-        });
+    function closeModal() {
+        modalOverlay.classList.remove('active');
+    }
 
-        // Settings Modal Controls
-        const modalOverlay = document.getElementById('settings-modal-overlay');
-        const openSettingsBtn = document.getElementById('open-settings-btn');
-        const profileSettingsBtn = document.getElementById('profile-settings-btn');
-        const closeModalBtn = document.getElementById('close-modal-btn');
+    openSettingsBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        openModal();
+    });
 
-        function openModal() {
-            modalOverlay.classList.add('active');
+    profileSettingsBtn.addEventListener('click', () => {
+        openModal();
+    });
+
+    closeModalBtn.addEventListener('click', closeModal);
+
+    modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) {
+            closeModal();
         }
+    });
 
-        function closeModal() {
-            modalOverlay.classList.remove('active');
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
+            closeModal();
         }
+    });
 
-        openSettingsBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            openModal();
+    // Modal Tab Switching
+    const tabBtns = document.querySelectorAll('.modal-sidebar .tab-btn');
+    const tabPanels = document.querySelectorAll('.tab-panel');
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetTab = btn.getAttribute('data-tab');
+
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabPanels.forEach(p => p.classList.remove('active'));
+
+            btn.classList.add('active');
+            document.getElementById(targetTab).classList.add('active');
         });
-
-        profileSettingsBtn.addEventListener('click', () => {
-            openModal();
-        });
-
-        closeModalBtn.addEventListener('click', closeModal);
-
-        modalOverlay.addEventListener('click', (e) => {
-            if (e.target === modalOverlay) {
-                closeModal();
-            }
-        });
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
-                closeModal();
-            }
-        });
-
-        // Modal Tab Switching
-        const tabBtns = document.querySelectorAll('.modal-sidebar .tab-btn');
-        const tabPanels = document.querySelectorAll('.tab-panel');
-
-        tabBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const targetTab = btn.getAttribute('data-tab');
-
-                tabBtns.forEach(b => b.classList.remove('active'));
-                tabPanels.forEach(p => p.classList.remove('active'));
-
-                btn.classList.add('active');
-                document.getElementById(targetTab).classList.add('active');
-            });
-        });
-    </script>
-
-</body>
-</html>
+    });
+</script>
