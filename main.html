@@ -332,10 +332,10 @@
             background-color: #ffffff;
         }
 
-        /* Toast Notifications Container (Bottom-Right) */
+        /* Toast Notifications Container (Top-Right) */
         .toast-container {
             position: fixed;
-            bottom: 24px;
+            top: 24px;
             right: 24px;
             display: flex;
             flex-direction: column;
@@ -354,7 +354,7 @@
             display: flex;
             flex-direction: column;
             pointer-events: auto;
-            transform: translateY(20px);
+            transform: translateY(-20px);
             opacity: 0;
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
@@ -679,7 +679,7 @@
             background: #ffffff;
             border: 1px solid #e2e8f0;
             border-radius: 10px;
-            width: 360px;
+            width: 380px;
             padding: 1.5rem;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
             display: flex;
@@ -720,6 +720,43 @@
 
         .btn-primary:hover {
             background: #1e293b;
+        }
+
+        /* Subscriptions Cards Grid */
+        .subs-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 1rem;
+        }
+
+        .sub-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            text-align: center;
+        }
+
+        .sub-card h4 {
+            font-size: 0.95rem;
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+        .sub-price {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #2563eb;
+        }
+
+        .sub-desc {
+            font-size: 0.75rem;
+            color: #64748b;
+            line-height: 1.3;
         }
     </style>
 </head>
@@ -771,10 +808,10 @@
 
     <main class="main-wrapper">
         <header class="top-header">
-            <a href="#" class="header-subscriptions-btn">
+            <button class="header-subscriptions-btn" id="open-subscriptions-btn">
                 <svg viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>
                 <span>Subscriptions</span>
-            </a>
+            </button>
 
             <div class="icon-btn-wrapper">
                 <button class="icon-btn" id="notifications-btn" aria-label="Notifications">
@@ -909,7 +946,42 @@
         </div>
     </div>
 
-    <!-- Custom Dialog Modal (For Email, Password, 2FA) -->
+    <!-- Subscriptions Modal Overlay -->
+    <div class="modal-overlay" id="subscriptions-modal-overlay">
+        <div class="settings-modal" style="width: 650px; height: auto; padding: 2rem; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem; margin-bottom: 1rem;">
+                <div>
+                    <h2 style="font-size: 1.25rem; font-weight: 700; color: #0f172a;">Available Subscriptions</h2>
+                    <p style="font-size: 0.85rem; color: #64748b; margin-top: 2px;">Choose the plan that fits your study flow.</p>
+                </div>
+                <button class="close-modal-btn" id="close-subscriptions-btn" aria-label="Close" style="position: static;">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="subs-grid">
+                <div class="sub-card">
+                    <h4>Free Plan</h4>
+                    <div class="sub-price">$0</div>
+                    <div class="sub-desc">Basic core tools for standard organization and simple study tracking.</div>
+                    <button class="btn-primary" style="margin-top: auto;" onclick="showToast('Active', 'You are currently on the Free plan.', 'info')">Current Plan</button>
+                </div>
+                <div class="sub-card" style="border-color: #2563eb; background: #eff6ff;">
+                    <h4>Pro Student</h4>
+                    <div class="sub-price">$9 / mo</div>
+                    <div class="sub-desc">Advanced scheduling, cloud synchronization, and custom themes.</div>
+                    <button class="btn-primary" style="margin-top: auto;" onclick="showToast('Success', 'Subscribed to Pro Student!', 'success')">Upgrade</button>
+                </div>
+                <div class="sub-card">
+                    <h4>Lifetime Pass</h4>
+                    <div class="sub-price">$79</div>
+                    <div class="sub-desc">One-time payment for lifetime access to all future updates and tools.</div>
+                    <button class="btn-primary" style="margin-top: auto;" onclick="showToast('Success', 'Subscribed to Lifetime Pass!', 'success')">Buy Lifetime</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Dialog Modal -->
     <div class="custom-dialog-overlay" id="custom-dialog-overlay">
         <div class="custom-dialog" id="custom-dialog-box"></div>
     </div>
@@ -918,7 +990,7 @@
     <div class="toast-container" id="toast-container"></div>
 
 <script>
-    // Toast Notification System
+    // Toast Notification System (Top-Right)
     function showToast(title, message, type = 'success', duration = 4000) {
         const container = document.getElementById('toast-container');
         if (!container) return;
@@ -950,14 +1022,12 @@
 
         container.appendChild(toast);
 
-        // Trigger show animation
         setTimeout(() => {
             toast.classList.add('show');
             const fill = toast.querySelector('.toast-progress-fill');
             if (fill) fill.style.transform = 'scaleX(0)';
         }, 20);
 
-        // Remove after duration
         setTimeout(() => {
             toast.classList.remove('show');
             setTimeout(() => toast.remove(), 300);
@@ -1101,16 +1171,19 @@
         };
     }
 
-    // 1. Change Email Dialog
+    // 1. Change Email Flow (Step 1: Enter email -> Step 2: Enter code sent to email)
+    let pendingNewEmail = '';
+    let emailVerificationCode = '';
+
     if (openChangeEmailBtn) {
         openChangeEmailBtn.addEventListener('click', () => {
             showCustomDialog(`
                 <h3>Change Email Address</h3>
-                <p>Enter your new email address below.</p>
-                <input type="email" class="setting-input" id="dialog-new-email" placeholder="newemail@example.com" value="${session && session.email ? session.email : ''}">
+                <p>Enter your new email address. We will send a confirmation code to it.</p>
+                <input type="email" class="setting-input" id="dialog-new-email" placeholder="newemail@example.com" value="">
                 <div class="custom-dialog-actions">
                     <button class="btn-secondary dialog-cancel">Cancel</button>
-                    <button class="btn-primary dialog-submit">Save Email</button>
+                    <button class="btn-primary dialog-submit">Send Code</button>
                 </div>
             `, () => {
                 const val = document.getElementById('dialog-new-email').value.trim();
@@ -1118,22 +1191,45 @@
                     showToast('Invalid Email', 'Please enter a valid email address.', 'error');
                     return false;
                 }
-                if (session) {
-                    session.email = val;
-                    const users = getUsersDB();
-                    const userIdx = users.findIndex(u => cleanId(u.id) === cleanId(session.id));
-                    if (userIdx !== -1) users[userIdx].email = val;
+                pendingNewEmail = val;
+                emailVerificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+                
+                showToast('Code Sent', `Verification code sent to ${maskEmail(pendingNewEmail)} (Simulated code: ${emailVerificationCode})`, 'info', 6000);
 
-                    localStorage.setItem('flowstudy_session', JSON.stringify(session));
-                    saveUsersDB(users);
-                    applyUserData(session.username, session.id, session.email, session.is2fa);
-                    showToast('Success', 'Email address successfully updated.', 'success');
-                }
+                setTimeout(() => {
+                    showCustomDialog(`
+                        <h3>Verify New Email</h3>
+                        <p>Enter the 6-digit code sent to <strong>${maskEmail(pendingNewEmail)}</strong>.</p>
+                        <input type="text" class="setting-input" id="dialog-email-code" placeholder="123456" maxlength="6">
+                        <div class="custom-dialog-actions">
+                            <button class="btn-secondary dialog-cancel">Cancel</button>
+                            <button class="btn-primary dialog-submit">Verify & Save</button>
+                        </div>
+                    `, () => {
+                        const enteredCode = document.getElementById('dialog-email-code').value.trim();
+                        if (enteredCode !== emailVerificationCode) {
+                            showToast('Error', 'Incorrect verification code.', 'error');
+                            return false;
+                        }
+
+                        if (session) {
+                            session.email = pendingNewEmail;
+                            const users = getUsersDB();
+                            const userIdx = users.findIndex(u => cleanId(u.id) === cleanId(session.id));
+                            if (userIdx !== -1) users[userIdx].email = pendingNewEmail;
+
+                            localStorage.setItem('flowstudy_session', JSON.stringify(session));
+                            saveUsersDB(users);
+                            applyUserData(session.username, session.id, session.email, session.is2fa);
+                            showToast('Success', 'Email address successfully updated!', 'success');
+                        }
+                    });
+                }, 150);
             });
         });
     }
 
-    // 2. Change Password Dialog with Forgot Password
+    // 2. Change Password Dialog
     if (openChangePasswordBtn) {
         openChangePasswordBtn.addEventListener('click', () => {
             showCustomDialog(`
@@ -1176,7 +1272,7 @@
         });
     }
 
-    // 3. 2FA Toggle Dialog (Password first, then code)
+    // 3. 2FA Toggle Dialog
     if (toggle2faBtn) {
         toggle2faBtn.addEventListener('click', () => {
             const isCurrentlyEnabled = session && session.is2fa;
@@ -1293,7 +1389,6 @@
                     return;
                 }
 
-                // Custom confirmation or quick removal with toast
                 let usersBefore = getUsersDB();
                 let updatedUsers = usersBefore.filter(u => cleanId(u.id).toLowerCase() !== idToDelete.toLowerCase());
                 
@@ -1335,6 +1430,7 @@
         });
     }
 
+    // Settings Modal
     const modalOverlay = document.getElementById('settings-modal-overlay');
     const openSettingsBtn = document.getElementById('open-settings-btn');
     const profileSettingsBtn = document.getElementById('profile-settings-btn');
@@ -1351,8 +1447,26 @@
         modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
     }
 
+    // Subscriptions Modal
+    const subscriptionsModalOverlay = document.getElementById('subscriptions-modal-overlay');
+    const openSubscriptionsBtn = document.getElementById('open-subscriptions-btn');
+    const closeSubscriptionsBtn = document.getElementById('close-subscriptions-btn');
+
+    function openSubsModal() { if (subscriptionsModalOverlay) subscriptionsModalOverlay.classList.add('active'); }
+    function closeSubsModal() { if (subscriptionsModalOverlay) subscriptionsModalOverlay.classList.remove('active'); }
+
+    if (openSubscriptionsBtn) openSubscriptionsBtn.addEventListener('click', (e) => { e.preventDefault(); openSubsModal(); });
+    if (closeSubscriptionsBtn) closeSubscriptionsBtn.addEventListener('click', closeSubsModal);
+
+    if (subscriptionsModalOverlay) {
+        subscriptionsModalOverlay.addEventListener('click', (e) => { if (e.target === subscriptionsModalOverlay) closeSubsModal(); });
+    }
+
     document.addEventListener('keydown', (e) => { 
-        if (e.key === 'Escape' && modalOverlay && modalOverlay.classList.contains('active')) closeModal(); 
+        if (e.key === 'Escape') {
+            if (modalOverlay) modalOverlay.classList.remove('active');
+            if (subscriptionsModalOverlay) subscriptionsModalOverlay.classList.remove('active');
+        }
     });
 
     const tabBtns = document.querySelectorAll('.modal-sidebar .tab-btn');
