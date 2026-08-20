@@ -462,12 +462,6 @@
         .setting-input:focus {
             border-color: #0f172a;
         }
-
-        .setting-input[readonly] {
-            background-color: #f8fafc;
-            color: #64748b;
-            cursor: not-allowed;
-        }
     </style>
 </head>
 <body>
@@ -558,6 +552,15 @@
                     <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
                     Notifications
                 </button>
+                <!-- Добавлена кнопка админки -->
+                <button class="tab-btn" id="admin-db-tab" data-tab="tab-admin" style="display: none;">
+                    <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    Admin DB
+                </button>
+                <button class="tab-btn" id="logout-btn" style="color: #ef4444; margin-top: auto;">
+                    <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    Log Out
+                </button>
             </aside>
 
             <main class="modal-content-area">
@@ -583,10 +586,9 @@
                         <h2>Account Profile</h2>
                         <p>Manage user information and account details.</p>
                     </div>
-                    <!-- Добавлено поле отображения ID пользователя -->
                     <div class="setting-group">
                         <label class="setting-label">User ID</label>
-                        <input type="text" class="setting-input" id="user-id-input" readonly placeholder="User ID">
+                        <input type="text" class="setting-input" id="user-id-input" placeholder="User ID">
                     </div>
                     <div class="setting-group">
                         <label class="setting-label">Username</label>
@@ -609,12 +611,20 @@
                         <p>Configure how and when you receive alerts.</p>
                     </div>
                 </div>
+
+                <!-- Panel: Admin DB -->
+                <div class="tab-panel" id="tab-admin">
+                    <div class="panel-header">
+                        <h2>Admin Database</h2>
+                        <p>Manage registered users list.</p>
+                    </div>
+                    <div id="admin-users-list" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;"></div>
+                </div>
             </main>
         </div>
     </div>
 
 <script>
-    // Поворот/безопасный поиск элементов
     const usernameInput = document.getElementById('username-input');
     const userIdInput = document.getElementById('user-id-input');
     const displayUsername = document.getElementById('display-username');
@@ -641,13 +651,8 @@
         const rawId = String(id || '1').replace(/^#/, '');
         if (userIdInput) userIdInput.value = `#${rawId}`;
 
-        // Проверка права на админ-панель (#z или z)
         if (adminTabBtn) {
-            if (rawId.toLowerCase() === 'z') {
-                adminTabBtn.style.display = 'block';
-            } else {
-                adminTabBtn.style.display = 'none';
-            }
+            adminTabBtn.style.display = (rawId.toLowerCase() === 'z') ? 'flex' : 'none';
         }
     }
 
@@ -661,8 +666,6 @@
         const savedUser = localStorage.getItem('flowstudy_username');
         if (savedUser) {
             applyUserData(savedUser, 1);
-        } else {
-            window.location.href = 'auth.html';
         }
     }
 
@@ -687,48 +690,45 @@
         });
     }
 
-// Изменение User ID (отслеживаем и input, и change)
-if (userIdInput) {
-    function handleIdChange(e) {
-        let val = e.target.value.trim();
-        
-        // Разрешаем вводить символы, автоматически добавляем # при необходимости
-        if (!val.startsWith('#') && val.length > 0) {
-            val = `#${val}`;
-            e.target.value = val;
-        }
-
-        const cleanId = val.replace(/^#/, '');
-
-        if (session) {
-            const users = getUsersDB();
-            const userIdx = users.findIndex(u => String(u.id) === String(session.id));
+    // Изменение User ID
+    if (userIdInput) {
+        function handleIdChange(e) {
+            let val = e.target.value.trim();
             
-            session.id = cleanId;
-            if (userIdx !== -1) {
-                users[userIdx].id = cleanId;
+            if (!val.startsWith('#') && val.length > 0) {
+                val = `#${val}`;
+                e.target.value = val;
             }
 
-            localStorage.setItem('flowstudy_session', JSON.stringify(session));
-            saveUsersDB(users);
+            const cleanId = val.replace(/^#/, '');
+
+            if (session) {
+                const users = getUsersDB();
+                const userIdx = users.findIndex(u => String(u.id) === String(session.id));
+                
+                session.id = cleanId;
+                if (userIdx !== -1) {
+                    users[userIdx].id = cleanId;
+                }
+
+                localStorage.setItem('flowstudy_session', JSON.stringify(session));
+                saveUsersDB(users);
+            }
+
+            if (adminTabBtn) {
+                adminTabBtn.style.display = (cleanId.toLowerCase() === 'z') ? 'flex' : 'none';
+            }
         }
 
-        // Обновляем видимость вкладки админа, если ввели 'z'
-        if (adminTabBtn) {
-            adminTabBtn.style.display = (cleanId.toLowerCase() === 'z') ? 'block' : 'none';
-        }
+        userIdInput.addEventListener('input', handleIdChange);
+        
+        userIdInput.addEventListener('blur', (e) => {
+            if (!e.target.value.trim() || e.target.value.trim() === '#') {
+                e.target.value = '#1';
+                handleIdChange(e);
+            }
+        });
     }
-
-    userIdInput.addEventListener('input', handleIdChange);
-    
-    // При потере фокуса, если поле пустое — ставим по умолчанию #1
-    userIdInput.addEventListener('blur', (e) => {
-        if (!e.target.value.trim() || e.target.value.trim() === '#') {
-            e.target.value = '#1';
-            handleIdChange(e);
-        }
-    });
-}
 
     // Отрисовка списка пользователей для админа
     function renderAdminUsersList() {
@@ -737,21 +737,21 @@ if (userIdInput) {
         adminUsersList.innerHTML = '';
 
         if (users.length === 0) {
-            adminUsersList.innerHTML = '<div style="color: #888;">No users found</div>';
+            adminUsersList.innerHTML = '<div style="color: #888; font-size: 14px;">No users found</div>';
             return;
         }
 
         users.forEach(u => {
             const row = document.createElement('div');
-            row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.05); padding: 8px 12px; border-radius: 6px; font-size: 14px;';
+            row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; background: #f1f5f9; padding: 8px 12px; border-radius: 6px; font-size: 14px;';
             
             row.innerHTML = `
                 <div>
-                    <strong style="color: #fff;">${u.username}</strong> 
-                    <span style="color: #888; font-size: 12px;">(#${u.id})</span>
-                    <div style="color: #aaa; font-size: 11px;">${u.email || 'No email'}</div>
+                    <strong style="color: #0f172a;">${u.username}</strong> 
+                    <span style="color: #64748b; font-size: 12px;">(#${u.id})</span>
+                    <div style="color: #64748b; font-size: 11px;">${u.email || 'No email'}</div>
                 </div>
-                <button class="delete-user-btn" data-id="${u.id}" style="background: #ff4d4d; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Delete</button>
+                <button class="delete-user-btn" data-id="${u.id}" style="background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Delete</button>
             `;
 
             adminUsersList.appendChild(row);
@@ -822,7 +822,7 @@ if (userIdInput) {
 
     tabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            if (btn.id === 'logout-btn') return; // Логаут обрабатывается отдельно
+            if (btn.id === 'logout-btn') return;
 
             const targetTab = btn.getAttribute('data-tab');
 
@@ -841,3 +841,5 @@ if (userIdInput) {
         });
     });
 </script>
+</body>
+</html>
