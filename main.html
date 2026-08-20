@@ -521,7 +521,7 @@
                 <div class="avatar" id="avatar-initial">U</div>
                 <div class="profile-info">
                     <span class="profile-name" id="display-username">User</span>
-                    <span class="profile-role">Student</span>
+                    <span class="profile-role" id="display-role">Student</span>
                 </div>
             </button>
         </header>
@@ -552,7 +552,6 @@
                     <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
                     Notifications
                 </button>
-                <!-- Добавлена кнопка админки -->
                 <button class="tab-btn" id="admin-db-tab" data-tab="tab-admin" style="display: none;">
                     <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                     Admin DB
@@ -628,10 +627,15 @@
     const usernameInput = document.getElementById('username-input');
     const userIdInput = document.getElementById('user-id-input');
     const displayUsername = document.getElementById('display-username');
+    const displayRole = document.getElementById('display-role');
     const avatarInitial = document.getElementById('avatar-initial');
     const adminTabBtn = document.getElementById('admin-db-tab');
     const adminUsersList = document.getElementById('admin-users-list');
     const logoutBtn = document.getElementById('logout-btn');
+
+    function cleanId(id) {
+        return String(id || '').replace(/^#/, '').trim();
+    }
 
     function getUsersDB() {
         const users = localStorage.getItem('flowstudy_users');
@@ -644,16 +648,16 @@
 
     function applyUserData(name, id) {
         const cleanName = name ? name.trim() : 'User';
+        const rawId = cleanId(id) || '1';
+
         if (displayUsername) displayUsername.textContent = cleanName;
         if (avatarInitial) avatarInitial.textContent = cleanName.charAt(0).toUpperCase();
         if (usernameInput) usernameInput.value = cleanName;
-        
-        const rawId = String(id || '1').replace(/^#/, '');
         if (userIdInput) userIdInput.value = `#${rawId}`;
 
-        if (adminTabBtn) {
-            adminTabBtn.style.display = (rawId.toLowerCase() === 'z') ? 'flex' : 'none';
-        }
+        const isAdmin = rawId.toLowerCase() === 'z';
+        if (displayRole) displayRole.textContent = isAdmin ? 'Admin' : 'Student';
+        if (adminTabBtn) adminTabBtn.style.display = isAdmin ? 'flex' : 'none';
     }
 
     // Загрузка сессии
@@ -680,7 +684,7 @@
 
             if (session) {
                 const users = getUsersDB();
-                const userIdx = users.findIndex(u => String(u.id) === String(session.id));
+                const userIdx = users.findIndex(u => cleanId(u.id) === cleanId(session.id));
                 session.username = newName;
                 if (userIdx !== -1) users[userIdx].username = newName;
                 
@@ -694,30 +698,29 @@
     if (userIdInput) {
         function handleIdChange(e) {
             let val = e.target.value.trim();
-            
             if (!val.startsWith('#') && val.length > 0) {
                 val = `#${val}`;
                 e.target.value = val;
             }
 
-            const cleanId = val.replace(/^#/, '');
+            const currentId = cleanId(val);
 
             if (session) {
                 const users = getUsersDB();
-                const userIdx = users.findIndex(u => String(u.id) === String(session.id));
+                const userIdx = users.findIndex(u => cleanId(u.id) === cleanId(session.id));
                 
-                session.id = cleanId;
+                session.id = currentId;
                 if (userIdx !== -1) {
-                    users[userIdx].id = cleanId;
+                    users[userIdx].id = currentId;
                 }
 
                 localStorage.setItem('flowstudy_session', JSON.stringify(session));
                 saveUsersDB(users);
             }
 
-            if (adminTabBtn) {
-                adminTabBtn.style.display = (cleanId.toLowerCase() === 'z') ? 'flex' : 'none';
-            }
+            const isAdmin = currentId.toLowerCase() === 'z';
+            if (displayRole) displayRole.textContent = isAdmin ? 'Admin' : 'Student';
+            if (adminTabBtn) adminTabBtn.style.display = isAdmin ? 'flex' : 'none';
         }
 
         userIdInput.addEventListener('input', handleIdChange);
@@ -742,16 +745,17 @@
         }
 
         users.forEach(u => {
+            const userCleanId = cleanId(u.id);
             const row = document.createElement('div');
             row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; background: #f1f5f9; padding: 8px 12px; border-radius: 6px; font-size: 14px;';
             
             row.innerHTML = `
                 <div>
                     <strong style="color: #0f172a;">${u.username}</strong> 
-                    <span style="color: #64748b; font-size: 12px;">(#${u.id})</span>
+                    <span style="color: #64748b; font-size: 12px;">(#${userCleanId})</span>
                     <div style="color: #64748b; font-size: 11px;">${u.email || 'No email'}</div>
                 </div>
-                <button class="delete-user-btn" data-id="${u.id}" style="background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Delete</button>
+                <button class="delete-user-btn" data-id="${userCleanId}" style="background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Delete</button>
             `;
 
             adminUsersList.appendChild(row);
@@ -759,9 +763,12 @@
 
         adminUsersList.querySelectorAll('.delete-user-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const idToDelete = e.target.getAttribute('data-id');
+                const idToDelete = cleanId(e.target.getAttribute('data-id'));
+                
                 if (confirm(`Are you sure you want to delete user #${idToDelete}?`)) {
-                    let updatedUsers = getUsersDB().filter(u => String(u.id) !== String(idToDelete));
+                    let usersBefore = getUsersDB();
+                    let updatedUsers = usersBefore.filter(u => cleanId(u.id) !== idToDelete);
+                    
                     saveUsersDB(updatedUsers);
                     renderAdminUsersList();
                 }
@@ -774,7 +781,7 @@
         logoutBtn.addEventListener('click', () => {
             if (confirm('Are you sure you want to log out?')) {
                 localStorage.removeItem('flowstudy_session');
-                window.location.href = 'index.html';
+                window.location.href = 'auth.html';
             }
         });
     }
