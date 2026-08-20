@@ -722,7 +722,35 @@
             background: #1e293b;
         }
 
-        /* Subscriptions Cards Grid */
+        /* Pricing Subscriptions Grid & Toggle */
+        .billing-toggle {
+            display: flex;
+            background: #f1f5f9;
+            padding: 3px;
+            border-radius: 8px;
+            width: fit-content;
+            margin: 1rem auto 0.5rem auto;
+            border: 1px solid #e2e8f0;
+        }
+
+        .billing-toggle .toggle-btn {
+            background: none;
+            border: none;
+            padding: 6px 16px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .billing-toggle .toggle-btn.active {
+            background: #ffffff;
+            color: #0f172a;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
         .subs-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -739,6 +767,11 @@
             flex-direction: column;
             gap: 8px;
             text-align: center;
+        }
+
+        .sub-card.popular {
+            border-color: #2563eb;
+            background: #eff6ff;
         }
 
         .sub-card h4 {
@@ -948,8 +981,8 @@
 
     <!-- Subscriptions Modal Overlay -->
     <div class="modal-overlay" id="subscriptions-modal-overlay">
-        <div class="settings-modal" style="width: 650px; height: auto; padding: 2rem; display: flex; flex-direction: column;">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem; margin-bottom: 1rem;">
+        <div class="settings-modal" style="width: 700px; height: auto; padding: 2rem; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem;">
                 <div>
                     <h2 style="font-size: 1.25rem; font-weight: 700; color: #0f172a;">Available Subscriptions</h2>
                     <p style="font-size: 0.85rem; color: #64748b; margin-top: 2px;">Choose the plan that fits your study flow.</p>
@@ -958,24 +991,40 @@
                     <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
+
+            <!-- Billing Toggle -->
+            <div class="billing-toggle">
+                <button class="toggle-btn active" data-period="monthly">Monthly</button>
+                <button class="toggle-btn" data-period="yearly">Yearly (-20%)</button>
+            </div>
+
             <div class="subs-grid">
+                <!-- Free Plan -->
                 <div class="sub-card">
-                    <h4>Free Plan</h4>
+                    <h4>Free</h4>
                     <div class="sub-price">$0</div>
                     <div class="sub-desc">Basic core tools for standard organization and simple study tracking.</div>
                     <button class="btn-primary" style="margin-top: auto;" onclick="showToast('Active', 'You are currently on the Free plan.', 'info')">Current Plan</button>
                 </div>
-                <div class="sub-card" style="border-color: #2563eb; background: #eff6ff;">
-                    <h4>Pro Student</h4>
-                    <div class="sub-price">$9 / mo</div>
-                    <div class="sub-desc">Advanced scheduling, cloud synchronization, and custom themes.</div>
-                    <button class="btn-primary" style="margin-top: auto;" onclick="showToast('Success', 'Subscribed to Pro Student!', 'success')">Upgrade</button>
-                </div>
+                <!-- Pro Plan -->
                 <div class="sub-card">
-                    <h4>Lifetime Pass</h4>
-                    <div class="sub-price">$79</div>
-                    <div class="sub-desc">One-time payment for lifetime access to all future updates and tools.</div>
-                    <button class="btn-primary" style="margin-top: auto;" onclick="showToast('Success', 'Subscribed to Lifetime Pass!', 'success')">Buy Lifetime</button>
+                    <h4>Pro</h4>
+                    <div class="sub-price">
+                        $<span class="amount" data-monthly="8.99" data-yearly="7.19">8.99</span>
+                        <span style="font-size: 0.75rem; font-weight: 400; color: #64748b;" class="period">/ mo</span>
+                    </div>
+                    <div class="sub-desc">Essential features for regular users and enhanced productivity.</div>
+                    <button class="btn-primary" style="margin-top: auto;" onclick="showToast('Success', 'Subscribed to Pro plan!', 'success')">Choose Pro</button>
+                </div>
+                <!-- Advanced Plan -->
+                <div class="sub-card popular">
+                    <h4>Advanced</h4>
+                    <div class="sub-price">
+                        $<span class="amount" data-monthly="19.99" data-yearly="15.99">19.99</span>
+                        <span style="font-size: 0.75rem; font-weight: 400; color: #64748b;" class="period">/ mo</span>
+                    </div>
+                    <div class="sub-desc">Advanced tools, priority support, and maximum power.</div>
+                    <button class="btn-primary" style="margin-top: auto;" onclick="showToast('Success', 'Subscribed to Advanced plan!', 'success')">Choose Advanced</button>
                 </div>
             </div>
         </div>
@@ -1171,7 +1220,7 @@
         };
     }
 
-    // 1. Change Email Flow (Step 1: Enter email -> Step 2: Enter code sent to email)
+    // Change Email Flow (With Email Code Verification)
     let pendingNewEmail = '';
     let emailVerificationCode = '';
 
@@ -1229,7 +1278,7 @@
         });
     }
 
-    // 2. Change Password Dialog
+    // Change Password Dialog
     if (openChangePasswordBtn) {
         openChangePasswordBtn.addEventListener('click', () => {
             showCustomDialog(`
@@ -1259,20 +1308,10 @@
                 }
                 showToast('Success', 'Password successfully updated!', 'success');
             });
-
-            setTimeout(() => {
-                const forgotLink = document.getElementById('dialog-forgot-link');
-                if (forgotLink) {
-                    forgotLink.onclick = (e) => {
-                        e.preventDefault();
-                        showToast('Reset Instructions', `Sent to your email (${session && session.email ? maskEmail(session.email) : 'registered email'}).`, 'info', 5000);
-                    };
-                }
-            }, 50);
         });
     }
 
-    // 3. 2FA Toggle Dialog
+    // 2FA Toggle Dialog
     if (toggle2faBtn) {
         toggle2faBtn.addEventListener('click', () => {
             const isCurrentlyEnabled = session && session.is2fa;
@@ -1297,12 +1336,12 @@
                 });
             } else {
                 showCustomDialog(`
-                    <h3>Enable 2FA (Step 1 of 2)</h3>
-                    <p>Confirm your password to initiate 2FA setup.</p>
+                    <h3>Enable 2FA</h3>
+                    <p>Confirm your password to enable Two-Factor Authentication.</p>
                     <input type="password" class="setting-input" id="dialog-2fa-pass" placeholder="Account password">
                     <div class="custom-dialog-actions">
                         <button class="btn-secondary dialog-cancel">Cancel</button>
-                        <button class="btn-primary dialog-submit">Next</button>
+                        <button class="btn-primary dialog-submit">Enable</button>
                     </div>
                 `, () => {
                     const pass = document.getElementById('dialog-2fa-pass').value;
@@ -1310,26 +1349,8 @@
                         showToast('Error', 'Password is required.', 'error');
                         return false;
                     }
-
-                    setTimeout(() => {
-                        showCustomDialog(`
-                            <h3>Verify Email Code (Step 2 of 2)</h3>
-                            <p>We sent a 6-digit code to <strong>${session && session.email ? maskEmail(session.email) : 'your email'}</strong>.</p>
-                            <input type="text" class="setting-input" id="dialog-2fa-code" placeholder="Enter code (e.g. 123456)" maxlength="6">
-                            <div class="custom-dialog-actions">
-                                <button class="btn-secondary dialog-cancel">Cancel</button>
-                                <button class="btn-primary dialog-submit">Verify & Enable</button>
-                            </div>
-                        `, () => {
-                            const code = document.getElementById('dialog-2fa-code').value.trim();
-                            if (!code) {
-                                showToast('Error', 'Please enter the verification code.', 'error');
-                                return false;
-                            }
-                            session.is2fa = true;
-                            updateSession2FA(true);
-                        });
-                    }, 100);
+                    session.is2fa = true;
+                    updateSession2FA(true);
                 });
             }
         });
@@ -1383,15 +1404,12 @@
         adminUsersList.querySelectorAll('.delete-user-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const idToDelete = cleanId(e.target.getAttribute('data-id'));
-                
                 if (idToDelete.toLowerCase() === 'z') {
                     showToast('Action Denied', 'User with ID "z" cannot be deleted.', 'error');
                     return;
                 }
-
                 let usersBefore = getUsersDB();
                 let updatedUsers = usersBefore.filter(u => cleanId(u.id).toLowerCase() !== idToDelete.toLowerCase());
-                
                 saveUsersDB(updatedUsers);
                 renderAdminUsersList();
                 showToast('User Deleted', `User #${idToDelete} was removed.`, 'info');
@@ -1410,11 +1428,12 @@
                 </div>
             `, () => {
                 localStorage.removeItem('flowstudy_session');
-                window.location.href = 'auth.html';
+                window.location.reload();
             });
         });
     }
 
+    // Sidebar Toggle
     const sidebar = document.getElementById('sidebar');
     const toggleBtn = document.getElementById('toggle-btn');
     const toggleIcon = document.getElementById('toggle-icon');
@@ -1430,7 +1449,7 @@
         });
     }
 
-    // Settings Modal
+    // Settings Modal Open/Close
     const modalOverlay = document.getElementById('settings-modal-overlay');
     const openSettingsBtn = document.getElementById('open-settings-btn');
     const profileSettingsBtn = document.getElementById('profile-settings-btn');
@@ -1447,7 +1466,7 @@
         modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
     }
 
-    // Subscriptions Modal
+    // Subscriptions Modal Open/Close
     const subscriptionsModalOverlay = document.getElementById('subscriptions-modal-overlay');
     const openSubscriptionsBtn = document.getElementById('open-subscriptions-btn');
     const closeSubscriptionsBtn = document.getElementById('close-subscriptions-btn');
@@ -1462,6 +1481,26 @@
         subscriptionsModalOverlay.addEventListener('click', (e) => { if (e.target === subscriptionsModalOverlay) closeSubsModal(); });
     }
 
+    // Billing Toggle for Pricing Plans (Monthly / Yearly)
+    const billingToggleButtons = document.querySelectorAll('.billing-toggle .toggle-btn');
+    billingToggleButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            billingToggleButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+
+            const period = button.getAttribute('data-period');
+            const amounts = document.querySelectorAll('.subs-grid .amount');
+
+            amounts.forEach(amount => {
+                if (period === 'yearly') {
+                    amount.textContent = amount.getAttribute('data-yearly');
+                } else {
+                    amount.textContent = amount.getAttribute('data-monthly');
+                }
+            });
+        });
+    });
+
     document.addEventListener('keydown', (e) => { 
         if (e.key === 'Escape') {
             if (modalOverlay) modalOverlay.classList.remove('active');
@@ -1475,7 +1514,6 @@
     tabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             if (btn.id === 'logout-btn') return;
-
             const targetTab = btn.getAttribute('data-tab');
 
             tabBtns.forEach(b => {
