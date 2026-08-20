@@ -614,12 +614,14 @@
     </div>
 
 <script>
+    // Поворот/безопасный поиск элементов
     const usernameInput = document.getElementById('username-input');
     const userIdInput = document.getElementById('user-id-input');
     const displayUsername = document.getElementById('display-username');
     const avatarInitial = document.getElementById('avatar-initial');
     const adminTabBtn = document.getElementById('admin-db-tab');
     const adminUsersList = document.getElementById('admin-users-list');
+    const logoutBtn = document.getElementById('logout-btn');
 
     function getUsersDB() {
         const users = localStorage.getItem('flowstudy_users');
@@ -632,21 +634,24 @@
 
     function applyUserData(name, id) {
         const cleanName = name ? name.trim() : 'User';
-        displayUsername.textContent = cleanName;
-        avatarInitial.textContent = cleanName.charAt(0).toUpperCase();
-        usernameInput.value = cleanName;
+        if (displayUsername) displayUsername.textContent = cleanName;
+        if (avatarInitial) avatarInitial.textContent = cleanName.charAt(0).toUpperCase();
+        if (usernameInput) usernameInput.value = cleanName;
         
         const rawId = String(id || '1').replace(/^#/, '');
-        userIdInput.value = `#${rawId}`;
+        if (userIdInput) userIdInput.value = `#${rawId}`;
 
-        // Проверка на админа (#z)
-        if (rawId.toLowerCase() === 'z') {
-            adminTabBtn.style.display = 'block';
-        } else {
-            adminTabBtn.style.display = 'none';
+        // Проверка права на админ-панель (#z или z)
+        if (adminTabBtn) {
+            if (rawId.toLowerCase() === 'z') {
+                adminTabBtn.style.display = 'block';
+            } else {
+                adminTabBtn.style.display = 'none';
+            }
         }
     }
 
+    // Загрузка сессии
     const sessionRaw = localStorage.getItem('flowstudy_session');
     let session = sessionRaw ? JSON.parse(sessionRaw) : null;
 
@@ -661,52 +666,55 @@
         }
     }
 
-    // Редактирование Username
-    usernameInput.addEventListener('input', (e) => {
-        const newName = e.target.value.trim() || 'User';
-        
-        displayUsername.textContent = newName;
-        avatarInitial.textContent = newName.charAt(0).toUpperCase();
-        
-        localStorage.setItem('flowstudy_username', newName);
-
-        if (session) {
-            const users = getUsersDB();
-            const userIdx = users.findIndex(u => String(u.id) === String(session.id));
+    // Изменение Username
+    if (usernameInput) {
+        usernameInput.addEventListener('input', (e) => {
+            const newName = e.target.value.trim() || 'User';
+            if (displayUsername) displayUsername.textContent = newName;
+            if (avatarInitial) avatarInitial.textContent = newName.charAt(0).toUpperCase();
             
-            session.username = newName;
-            if (userIdx !== -1) users[userIdx].username = newName;
+            localStorage.setItem('flowstudy_username', newName);
+
+            if (session) {
+                const users = getUsersDB();
+                const userIdx = users.findIndex(u => String(u.id) === String(session.id));
+                session.username = newName;
+                if (userIdx !== -1) users[userIdx].username = newName;
+                
+                localStorage.setItem('flowstudy_session', JSON.stringify(session));
+                saveUsersDB(users);
+            }
+        });
+    }
+
+    // Изменение User ID
+    if (userIdInput) {
+        userIdInput.addEventListener('change', (e) => {
+            let val = e.target.value.trim();
+            if (!val.startsWith('#')) val = `#${val}`;
+            if (val === '#') val = '#1';
             
-            localStorage.setItem('flowstudy_session', JSON.stringify(session));
-            saveUsersDB(users);
-        }
-    });
+            e.target.value = val;
+            const cleanId = val.replace(/^#/, '');
 
-    // Редактирование User ID
-    userIdInput.addEventListener('change', (e) => {
-        let val = e.target.value.trim();
-        if (!val.startsWith('#')) val = `#${val}`;
-        if (val === '#') val = '#1';
-        
-        e.target.value = val;
-        const cleanId = val.replace(/^#/, '');
+            if (session) {
+                const users = getUsersDB();
+                const userIdx = users.findIndex(u => String(u.id) === String(session.id));
+                
+                session.id = cleanId;
+                if (userIdx !== -1) users[userIdx].id = cleanId;
 
-        if (session) {
-            const users = getUsersDB();
-            const userIdx = users.findIndex(u => String(u.id) === String(session.id));
-            
-            session.id = cleanId;
-            if (userIdx !== -1) users[userIdx].id = cleanId;
+                localStorage.setItem('flowstudy_session', JSON.stringify(session));
+                saveUsersDB(users);
+            }
 
-            localStorage.setItem('flowstudy_session', JSON.stringify(session));
-            saveUsersDB(users);
-        }
+            applyUserData(session ? session.username : (usernameInput ? usernameInput.value : 'User'), cleanId);
+        });
+    }
 
-        applyUserData(session ? session.username : usernameInput.value, cleanId);
-    });
-
-    // Отрисовка списка пользователей для админа (#z)
+    // Отрисовка списка пользователей для админа
     function renderAdminUsersList() {
+        if (!adminUsersList) return;
         const users = getUsersDB();
         adminUsersList.innerHTML = '';
 
@@ -717,13 +725,13 @@
 
         users.forEach(u => {
             const row = document.createElement('div');
-            row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.05); padding: 8px 12px; border-radius: 6px;';
+            row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.05); padding: 8px 12px; border-radius: 6px; font-size: 14px;';
             
             row.innerHTML = `
                 <div>
                     <strong style="color: #fff;">${u.username}</strong> 
                     <span style="color: #888; font-size: 12px;">(#${u.id})</span>
-                    <div style="color: #aaa; font-size: 11px;">${u.email}</div>
+                    <div style="color: #aaa; font-size: 11px;">${u.email || 'No email'}</div>
                 </div>
                 <button class="delete-user-btn" data-id="${u.id}" style="background: #ff4d4d; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Delete</button>
             `;
@@ -731,7 +739,7 @@
             adminUsersList.appendChild(row);
         });
 
-        document.querySelectorAll('.delete-user-btn').forEach(btn => {
+        adminUsersList.querySelectorAll('.delete-user-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const idToDelete = e.target.getAttribute('data-id');
                 if (confirm(`Are you sure you want to delete user #${idToDelete}?`)) {
@@ -743,25 +751,31 @@
         });
     }
 
-    // Кнопка Log Out
-    document.getElementById('logout-btn').addEventListener('click', () => {
-        if (confirm('Are you sure you want to log out?')) {
-            localStorage.removeItem('flowstudy_session');
-            window.location.href = 'auth.html';
-        }
-    });
+    // Кнопка Logout
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to log out?')) {
+                localStorage.removeItem('flowstudy_session');
+                window.location.href = 'auth.html';
+            }
+        });
+    }
 
     // Sidebar Toggle
     const sidebar = document.getElementById('sidebar');
     const toggleBtn = document.getElementById('toggle-btn');
     const toggleIcon = document.getElementById('toggle-icon');
 
-    toggleBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('collapsed');
-        toggleIcon.innerHTML = sidebar.classList.contains('collapsed') 
-            ? '<polyline points="9 18 15 12 9 6"></polyline>'
-            : '<polyline points="15 18 9 12 15 6"></polyline>';
-    });
+    if (toggleBtn && sidebar) {
+        toggleBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            if (toggleIcon) {
+                toggleIcon.innerHTML = sidebar.classList.contains('collapsed') 
+                    ? '<polyline points="9 18 15 12 9 6"></polyline>'
+                    : '<polyline points="15 18 9 12 15 6"></polyline>';
+            }
+        });
+    }
 
     // Modal Controls
     const modalOverlay = document.getElementById('settings-modal-overlay');
@@ -769,25 +783,34 @@
     const profileSettingsBtn = document.getElementById('profile-settings-btn');
     const closeModalBtn = document.getElementById('close-modal-btn');
 
-    function openModal() { modalOverlay.classList.add('active'); }
-    function closeModal() { modalOverlay.classList.remove('active'); }
+    function openModal() { if (modalOverlay) modalOverlay.classList.add('active'); }
+    function closeModal() { if (modalOverlay) modalOverlay.classList.remove('active'); }
 
-    openSettingsBtn.addEventListener('click', (e) => { e.preventDefault(); openModal(); });
-    profileSettingsBtn.addEventListener('click', openModal);
-    closeModalBtn.addEventListener('click', closeModal);
+    if (openSettingsBtn) openSettingsBtn.addEventListener('click', (e) => { e.preventDefault(); openModal(); });
+    if (profileSettingsBtn) profileSettingsBtn.addEventListener('click', openModal);
+    if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
 
-    modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modalOverlay.classList.contains('active')) closeModal(); });
+    if (modalOverlay) {
+        modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+    }
 
-    // Modal Tab Switching
-    const tabBtns = document.querySelectorAll('.modal-sidebar .tab-btn:not(.logout-btn)');
+    document.addEventListener('keydown', (e) => { 
+        if (e.key === 'Escape' && modalOverlay && modalOverlay.classList.contains('active')) closeModal(); 
+    });
+
+    // Переключение вкладок в модальном окне
+    const tabBtns = document.querySelectorAll('.modal-sidebar .tab-btn');
     const tabPanels = document.querySelectorAll('.tab-panel');
 
     tabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
+            if (btn.id === 'logout-btn') return; // Логаут обрабатывается отдельно
+
             const targetTab = btn.getAttribute('data-tab');
 
-            tabBtns.forEach(b => b.classList.remove('active'));
+            tabBtns.forEach(b => {
+                if (b.id !== 'logout-btn') b.classList.remove('active');
+            });
             tabPanels.forEach(p => p.classList.remove('active'));
 
             btn.classList.add('active');
