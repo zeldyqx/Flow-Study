@@ -609,33 +609,41 @@
     const avatarInitial = document.getElementById('avatar-initial');
 
     function applyUsername(name) {
-        const cleanName = name.trim() || 'User';
+        const cleanName = name ? name.trim() : 'User';
         displayUsername.textContent = cleanName;
         avatarInitial.textContent = cleanName.charAt(0).toUpperCase();
         usernameInput.value = cleanName;
     }
 
-    // 1. Проверяем сохраненный ник в localStorage
-    const savedUser = localStorage.getItem('flowstudy_username');
+    // Достаем сессию, сохраненную в auth.html
+    const sessionRaw = localStorage.getItem('flowstudy_session');
+    let session = sessionRaw ? JSON.parse(sessionRaw) : null;
 
-    if (savedUser !== null) {
-        // Если уже сохраняли — берем его
-        applyUsername(savedUser);
+    if (session && session.username) {
+        applyUsername(session.username);
     } else {
-        // Если запускаем впервые — берем то, что вписано прямо в HTML инпута!
-        const initialInputValue = usernameInput.value || usernameInput.getAttribute('value') || 'User';
-        applyUsername(initialInputValue);
+        const savedUser = localStorage.getItem('flowstudy_username');
+        if (savedUser) {
+            applyUsername(savedUser);
+        } else {
+            // Если сессии нет вовсе — отправляем на auth.html
+            window.location.href = 'auth.html';
+        }
     }
 
-    // 2. Слушаем ввод и сохраняем на лету
+    // Слушаем изменение ника в настройках и обновляем сессию + localStorage
     usernameInput.addEventListener('input', (e) => {
-        const newName = e.target.value;
-        const cleanName = newName.trim() || 'User';
+        const newName = e.target.value.trim() || 'User';
         
-        displayUsername.textContent = cleanName;
-        avatarInitial.textContent = cleanName.charAt(0).toUpperCase();
+        displayUsername.textContent = newName;
+        avatarInitial.textContent = newName.charAt(0).toUpperCase();
         
         localStorage.setItem('flowstudy_username', newName);
+
+        if (session) {
+            session.username = newName;
+            localStorage.setItem('flowstudy_session', JSON.stringify(session));
+        }
     });
 
     // Sidebar Toggle
@@ -705,3 +713,5 @@
         });
     });
 </script>
+</body>
+</html>
