@@ -462,6 +462,13 @@
         .setting-input:focus {
             border-color: #0f172a;
         }
+
+        .setting-input[readonly] {
+            background-color: #f1f5f9;
+            color: #64748b;
+            cursor: not-allowed;
+            border-color: #e2e8f0;
+        }
     </style>
 </head>
 <body>
@@ -497,6 +504,12 @@
                     <a href="#" class="nav-item">
                         <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                         <span class="nav-text">Schedule</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-item">
+                        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="22" y1="11" x2="16" y2="11"></line></svg>
+                        <span class="nav-text">Subscriptions</span>
                     </a>
                 </li>
             </ul>
@@ -587,7 +600,7 @@
                     </div>
                     <div class="setting-group">
                         <label class="setting-label">User ID</label>
-                        <input type="text" class="setting-input" id="user-id-input" placeholder="User ID">
+                        <input type="text" class="setting-input" id="user-id-input" placeholder="User ID" readonly>
                     </div>
                     <div class="setting-group">
                         <label class="setting-label">Username</label>
@@ -694,45 +707,6 @@
         });
     }
 
-    // Изменение User ID
-    if (userIdInput) {
-        function handleIdChange(e) {
-            let val = e.target.value.trim();
-            if (!val.startsWith('#') && val.length > 0) {
-                val = `#${val}`;
-                e.target.value = val;
-            }
-
-            const currentId = cleanId(val);
-
-            if (session) {
-                const users = getUsersDB();
-                const userIdx = users.findIndex(u => cleanId(u.id) === cleanId(session.id));
-                
-                session.id = currentId;
-                if (userIdx !== -1) {
-                    users[userIdx].id = currentId;
-                }
-
-                localStorage.setItem('flowstudy_session', JSON.stringify(session));
-                saveUsersDB(users);
-            }
-
-            const isAdmin = currentId.toLowerCase() === 'z';
-            if (displayRole) displayRole.textContent = isAdmin ? 'Admin' : 'Student';
-            if (adminTabBtn) adminTabBtn.style.display = isAdmin ? 'flex' : 'none';
-        }
-
-        userIdInput.addEventListener('input', handleIdChange);
-        
-        userIdInput.addEventListener('blur', (e) => {
-            if (!e.target.value.trim() || e.target.value.trim() === '#') {
-                e.target.value = '#1';
-                handleIdChange(e);
-            }
-        });
-    }
-
     // Отрисовка списка пользователей для админа
     function renderAdminUsersList() {
         if (!adminUsersList) return;
@@ -746,6 +720,7 @@
 
         users.forEach(u => {
             const userCleanId = cleanId(u.id);
+            const isProtectedAdmin = userCleanId.toLowerCase() === 'z';
             const row = document.createElement('div');
             row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; background: #f1f5f9; padding: 8px 12px; border-radius: 6px; font-size: 14px;';
             
@@ -755,7 +730,10 @@
                     <span style="color: #64748b; font-size: 12px;">(#${userCleanId})</span>
                     <div style="color: #64748b; font-size: 11px;">${u.email || 'No email'}</div>
                 </div>
-                <button class="delete-user-btn" data-id="${userCleanId}" style="background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Delete</button>
+                ${isProtectedAdmin 
+                    ? '<span style="color: #94a3b8; font-size: 12px; font-weight: 500;">Protected</span>' 
+                    : `<button class="delete-user-btn" data-id="${userCleanId}" style="background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Delete</button>`
+                }
             `;
 
             adminUsersList.appendChild(row);
@@ -765,9 +743,14 @@
             btn.addEventListener('click', (e) => {
                 const idToDelete = cleanId(e.target.getAttribute('data-id'));
                 
+                if (idToDelete.toLowerCase() === 'z') {
+                    alert('User with ID "z" cannot be deleted.');
+                    return;
+                }
+
                 if (confirm(`Are you sure you want to delete user #${idToDelete}?`)) {
                     let usersBefore = getUsersDB();
-                    let updatedUsers = usersBefore.filter(u => cleanId(u.id) !== idToDelete);
+                    let updatedUsers = usersBefore.filter(u => cleanId(u.id).toLowerCase() !== idToDelete.toLowerCase());
                     
                     saveUsersDB(updatedUsers);
                     renderAdminUsersList();
