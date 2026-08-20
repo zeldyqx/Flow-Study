@@ -687,30 +687,48 @@
         });
     }
 
-    // Изменение User ID
-    if (userIdInput) {
-        userIdInput.addEventListener('change', (e) => {
-            let val = e.target.value.trim();
-            if (!val.startsWith('#')) val = `#${val}`;
-            if (val === '#') val = '#1';
-            
+// Изменение User ID (отслеживаем и input, и change)
+if (userIdInput) {
+    function handleIdChange(e) {
+        let val = e.target.value.trim();
+        
+        // Разрешаем вводить символы, автоматически добавляем # при необходимости
+        if (!val.startsWith('#') && val.length > 0) {
+            val = `#${val}`;
             e.target.value = val;
-            const cleanId = val.replace(/^#/, '');
+        }
 
-            if (session) {
-                const users = getUsersDB();
-                const userIdx = users.findIndex(u => String(u.id) === String(session.id));
-                
-                session.id = cleanId;
-                if (userIdx !== -1) users[userIdx].id = cleanId;
+        const cleanId = val.replace(/^#/, '');
 
-                localStorage.setItem('flowstudy_session', JSON.stringify(session));
-                saveUsersDB(users);
+        if (session) {
+            const users = getUsersDB();
+            const userIdx = users.findIndex(u => String(u.id) === String(session.id));
+            
+            session.id = cleanId;
+            if (userIdx !== -1) {
+                users[userIdx].id = cleanId;
             }
 
-            applyUserData(session ? session.username : (usernameInput ? usernameInput.value : 'User'), cleanId);
-        });
+            localStorage.setItem('flowstudy_session', JSON.stringify(session));
+            saveUsersDB(users);
+        }
+
+        // Обновляем видимость вкладки админа, если ввели 'z'
+        if (adminTabBtn) {
+            adminTabBtn.style.display = (cleanId.toLowerCase() === 'z') ? 'block' : 'none';
+        }
     }
+
+    userIdInput.addEventListener('input', handleIdChange);
+    
+    // При потере фокуса, если поле пустое — ставим по умолчанию #1
+    userIdInput.addEventListener('blur', (e) => {
+        if (!e.target.value.trim() || e.target.value.trim() === '#') {
+            e.target.value = '#1';
+            handleIdChange(e);
+        }
+    });
+}
 
     // Отрисовка списка пользователей для админа
     function renderAdminUsersList() {
