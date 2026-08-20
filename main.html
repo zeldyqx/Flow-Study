@@ -999,11 +999,11 @@
             </div>
 
             <div class="subs-grid">
-                <!-- Starter Plan ($2.99) -->
+                <!-- Starter Plan -->
                 <div class="sub-card">
                     <h4>Starter</h4>
                     <div class="sub-price">
-                        $<span class="amount" data-monthly="2.99" data-yearly="2.69">2.99</span>
+                        $<span class="amount" data-monthly="2.99" data-yearly="32.29">2.99</span>
                         <span style="font-size: 0.75rem; font-weight: 400; color: #64748b;" class="period">/ mo</span>
                     </div>
                     <div class="sub-desc">Basic core tools for standard organization and simple study tracking.</div>
@@ -1013,7 +1013,7 @@
                 <div class="sub-card">
                     <h4>Pro</h4>
                     <div class="sub-price">
-                        $<span class="amount" data-monthly="8.99" data-yearly="8.09">8.99</span>
+                        $<span class="amount" data-monthly="8.99" data-yearly="97.09">8.99</span>
                         <span style="font-size: 0.75rem; font-weight: 400; color: #64748b;" class="period">/ mo</span>
                     </div>
                     <div class="sub-desc">Essential features for regular users and enhanced productivity.</div>
@@ -1023,7 +1023,7 @@
                 <div class="sub-card popular">
                     <h4>Advanced</h4>
                     <div class="sub-price">
-                        $<span class="amount" data-monthly="19.99" data-yearly="17.99">19.99</span>
+                        $<span class="amount" data-monthly="19.99" data-yearly="215.89">19.99</span>
                         <span style="font-size: 0.75rem; font-weight: 400; color: #64748b;" class="period">/ mo</span>
                     </div>
                     <div class="sub-desc">Advanced tools, priority support, and maximum power.</div>
@@ -1484,7 +1484,7 @@
         subscriptionsModalOverlay.addEventListener('click', (e) => { if (e.target === subscriptionsModalOverlay) closeSubsModal(); });
     }
 
-    // Billing Toggle for Pricing Plans (Monthly / Yearly with 10% discount)
+    // Billing Toggle for Pricing Plans (Monthly / Yearly with 10% discount multiplied by 12)
     const billingToggleButtons = document.querySelectorAll('.billing-toggle .toggle-btn');
     billingToggleButtons.forEach(button => {
         button.addEventListener('click', () => {
@@ -1493,6 +1493,7 @@
 
             const period = button.getAttribute('data-period');
             const amounts = document.querySelectorAll('.subs-grid .amount');
+            const periods = document.querySelectorAll('.subs-grid .period');
 
             amounts.forEach(amount => {
                 if (period === 'yearly') {
@@ -1500,6 +1501,10 @@
                 } else {
                     amount.textContent = amount.getAttribute('data-monthly');
                 }
+            });
+
+            periods.forEach(p => {
+                p.textContent = period === 'yearly' ? '/ yr' : '/ mo';
             });
         });
     });
