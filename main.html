@@ -995,9 +995,9 @@
                     
                     <div class="tools-row">
                         <button class="tool-small-btn" id="generate-btn">Generate</button>
-                        <button class="tool-small-btn" onclick="showToast('Action', 'Triggered Humanizer', 'info')">Humanizer</button>
-                        <button class="tool-small-btn" onclick="showToast('Action', 'Triggered Shortener', 'info')">Shortener</button>
-                        <button class="tool-small-btn" onclick="showToast('Action', 'Triggered Extender', 'info')">Extender</button>
+                        <button class="tool-small-btn" onclick="runAIAction('Humanizer', 'Rewrite the following text to sound completely natural and human-written, while retaining all core facts:')">Humanizer</button>
+                        <button class="tool-small-btn" onclick="runAIAction('Shortener', 'Summarize and condense the following text concisely while keeping the key points:')">Shortener</button>
+                        <button class="tool-small-btn" onclick="runAIAction('Extender', 'Expand and elaborate on the following text with more detailed explanations, context, and bullet points:')">Extender</button>
                     </div>
                 </div>
             </div>
@@ -1361,86 +1361,78 @@
         };
     }
 
-    // Smart Content Generator (Recognizes WW2, Quantum Computing, etc., or builds a custom smart summary)
+    // AI Integration via API (/api/generate)
     const generateBtn = document.getElementById('generate-btn');
     const toolSourceText = document.getElementById('tool-source-text');
     const toolPromptInput = document.getElementById('tool-prompt-input');
 
-    function performGeneration() {
+    async function callAI(promptText) {
+        const response = await fetch('/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: promptText })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to generate response from AI.');
+        }
+
+        const data = await response.json();
+        // Extract text from Gemini API response structure
+        const candidate = data.candidates?.[0];
+        const text = candidate?.content?.parts?.[0]?.text || candidate?.output || data.text;
+        
+        if (!text) {
+            throw new Error('Invalid response structure received from AI.');
+        }
+        return text;
+    }
+
+    async function performGeneration() {
         const promptText = toolPromptInput.value.trim();
         if (!promptText) {
             showToast('Prompt Required', 'Please enter a topic or prompt in the field first.', 'error');
             return;
         }
 
-        const lowerPrompt = promptText.toLowerCase();
-        let generatedNotes = '';
+        generateBtn.textContent = 'Generating...';
+        generateBtn.disabled = true;
 
-        // Check if query is about WW2 (Вторая мировая)
-        if (lowerPrompt.includes('ww2') || lowerPrompt.includes('world war ii') || lowerPrompt.includes('вторая мировая')) {
-            generatedNotes = `STUDY NOTES: WORLD WAR II (1939–1945)
+        try {
+            const aiResult = await callAI(promptText);
+            toolSourceText.value = aiResult;
+            showToast('Success', 'AI generated study notes successfully!', 'success');
+        } catch (err) {
+            showToast('AI Error', err.message || 'An error occurred while connecting to the AI.', 'error');
+        } finally {
+            generateBtn.textContent = 'Generate';
+            generateBtn.disabled = false;
+        }
+    }
 
-1. OVERVIEW & TIMELINE
-- Conflict Period: September 1, 1939 – September 2, 1945.
-- Global impact: The deadliest conflict in human history, involving over 30 countries and resulting in an estimated 70–85 million fatalities.
-- Main opposing alliances:
-  • The Axis Powers: Germany, Italy, Japan.
-  • The Allied Powers: Great Britain, Soviet Union, United States, China, France.
-
-2. KEY PHASES & MAJOR DATES
-- September 1, 1939: Germany invades Poland; Britain and France declare war on Germany.
-- June 22, 1941: Operation Barbarossa – Germany launches a massive surprise invasion of the Soviet Union.
-- December 7, 1941: Japan attacks Pearl Harbor, prompting the United States to enter the war.
-- June 6, 1944: D-Day (Operation Overlord) – Allied forces successfully land in Normandy, France, opening the Western Front.
-- May 8, 1945: V-E Day (Victory in Europe) – Unconditional surrender of Nazi Germany.
-- September 2, 1945: V-J Day (Victory over Japan) – Formal surrender of Japan aboard the USS Missouri, ending the war globally.
-
-3. KEY HISTORICAL FIGURES
-- Winston Churchill: Prime Minister of the United Kingdom, renowned for his leadership and inspiring speeches.
-- Franklin D. Roosevelt / Harry S. Truman: U.S. Presidents who guided the nation through mobilization, strategy, and the final stages of the conflict.
-- Joseph Stalin: Leader of the Soviet Union, directing the Eastern Front, which bore the heaviest burden of fighting German land forces.
-- Adolf Hitler: Dictator of Nazi Germany and instigator of aggressive expansion and the Holocaust.
-- Dwight D. Eisenhower: Supreme Allied Commander in Europe, mastermind of the D-Day landings.
-
-4. AFTERMATH & LONG-TERM CONSEQUENCES
-- Geopolitical Shift: Rise of the United States and the Soviet Union as global superpowers, setting the stage for the Cold War.
-- International Cooperation: Establishment of the United Nations (UN) in October 1945 to maintain international peace and security.
-- Decolonization: Accelerated decline of European colonial empires, leading to independence movements across Asia and Africa.`;
-
-        } else {
-            // General detailed template for any other entered topic
-            const capitalizedTopic = promptText.charAt(0).toUpperCase() + promptText.slice(1);
-            generatedNotes = `STUDY NOTES: ${capitalizedTopic.toUpperCase()}
-
-1. CORE INTRODUCTION & DEFINITION
-- Topic Focus: ${promptText}
-- Fundamental concepts, background context, and foundational theory.
-- Significance and application in modern academic or industrial settings.
-
-2. KEY CHRONOLOGY & MILESTONES
-- Initial development / Historical emergence.
-- Critical turning points, breakthrough innovations, or major structural phases.
-- Current status, future trends, and anticipated advancements.
-
-3. NOTABLE FIGURES, CONTRIBUTORS & ENTITIES
-- Pioneer researchers, key leaders, or primary organizations driving development.
-- Roles played by major stakeholders in shaping the current landscape.
-
-4. SUMMARY & PRACTICAL TAKEAWAYS
-- Essential takeaways required for academic reports, essays, or project execution.
-- Recommended areas for deeper reading and further research.`;
+    async function runAIAction(actionName, instructionPrefix) {
+        const currentNotes = toolSourceText.value.trim();
+        const promptText = toolPromptInput.value.trim();
+        
+        let targetContent = currentNotes || promptText;
+        if (!targetContent) {
+            showToast('Content Required', 'Please provide some text or a prompt to process.', 'error');
+            return;
         }
 
-        toolSourceText.value = generatedNotes;
-        showToast('Success', 'Detailed study notes generated successfully!', 'success');
+        showToast('Processing', `Running ${actionName} via AI...`, 'info');
+
+        try {
+            const fullPrompt = `${instructionPrefix}\n\n${targetContent}`;
+            const aiResult = await callAI(fullPrompt);
+            toolSourceText.value = aiResult;
+            showToast('Success', `${actionName} completed successfully!`, 'success');
+        } catch (err) {
+            showToast('AI Error', err.message || 'An error occurred during AI processing.', 'error');
+        }
     }
 
     if (generateBtn && toolSourceText && toolPromptInput) {
-        // Auto-generate on load if input has default WW2 prompt text
-        if (toolPromptInput.value.trim()) {
-            performGeneration();
-        }
-
         generateBtn.addEventListener('click', () => {
             const currentText = toolSourceText.value.trim();
             if (currentText.length > 0) {
