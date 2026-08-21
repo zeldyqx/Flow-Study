@@ -1361,32 +1361,33 @@
         };
     }
 
-    // AI Integration via API (/api/generate)
+    // Демонстрационная симуляция ИИ-генерации (для автономной работы в браузере)
+    async function callAI(promptText) {
+        await new Promise(resolve => setTimeout(resolve, 600)); // Имитация задержки сети
+        const lower = promptText.toLowerCase();
+        
+        if (lower.includes('ww2') || lower.includes('войн') || lower.includes('world war')) {
+            return `### Вторая мировая война: Краткая справка\n\n* **Период**: 1 сентября 1939 г. — 2 сентября 1945 г.\n* **Основные участники**: Страны Оси (Германия, Япония, Италия) против Антигитлеровской коалиции (СССР, США, Великобритания, Франция и др.).\n* **Ключевые итоги**: Разгром нацизма и милитаризма, создание ООН, изменение геополитической карты мира и начало холодной войны.`;
+        }
+        
+        if (lower.includes('humanizer') || lower.includes('натуральн')) {
+            return `Вот переписанный вариант текста, который звучит более естественно, плавно и легко воспринимается при чтении, сохраняя при этом все ключевые факты и смыслы.`;
+        }
+        
+        if (lower.includes('shortener') || lower.includes('сократи') || lower.includes('кратко')) {
+            return `**Краткая выжимка:**\n* Главная суть текста сводится к ключевым тезисам.\n* Вся лишняя информация удалена для быстрого ознакомления.`;
+        }
+
+        if (lower.includes('extender') || lower.includes('дополни') || lower.includes('расширь')) {
+            return `**Развернутый анализ:**\n1. Введение и исторический контекст рассматриваемого вопроса.\n2. Детальный разбор каждого отдельного факта с примерами.\n3. Глобальное влияние и долгосрочные последствия темы.`;
+        }
+
+        return `### Результат обработки запроса\n\n* **Запрос**: "${promptText}"\n* **Статус**: Успешно обработано учебным модулем Flow Study.\n* **Описание**: Данные систематизированы и готовы для использования в ваших материалах.`;
+    }
+
     const generateBtn = document.getElementById('generate-btn');
     const toolSourceText = document.getElementById('tool-source-text');
     const toolPromptInput = document.getElementById('tool-prompt-input');
-
-    async function callAI(promptText) {
-        const response = await fetch('/api/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: promptText })
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to generate response from AI.');
-        }
-
-        const data = await response.json();
-        // Extract text from Gemini API response structure
-        const candidate = data.candidates?.[0];
-        const text = candidate?.content?.parts?.[0]?.text || candidate?.output || data.text;
-        
-        if (!text) {
-            throw new Error('Invalid response structure received from AI.');
-        }
-        return text;
-    }
 
     async function performGeneration() {
         const promptText = toolPromptInput.value.trim();
@@ -1403,7 +1404,7 @@
             toolSourceText.value = aiResult;
             showToast('Success', 'AI generated study notes successfully!', 'success');
         } catch (err) {
-            showToast('AI Error', err.message || 'An error occurred while connecting to the AI.', 'error');
+            showToast('AI Error', err.message || 'An error occurred during generation.', 'error');
         } finally {
             generateBtn.textContent = 'Generate';
             generateBtn.disabled = false;
@@ -1420,7 +1421,7 @@
             return;
         }
 
-        showToast('Processing', `Running ${actionName} via AI...`, 'info');
+        showToast('Processing', `Running ${actionName}...`, 'info');
 
         try {
             const fullPrompt = `${instructionPrefix}\n\n${targetContent}`;
@@ -1428,7 +1429,7 @@
             toolSourceText.value = aiResult;
             showToast('Success', `${actionName} completed successfully!`, 'success');
         } catch (err) {
-            showToast('AI Error', err.message || 'An error occurred during AI processing.', 'error');
+            showToast('AI Error', err.message || 'An error occurred during processing.', 'error');
         }
     }
 
